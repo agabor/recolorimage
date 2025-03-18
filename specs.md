@@ -32,7 +32,7 @@ The application processes images in three stages:
 ### Color Palette Section
 - Two distinct palette components:
   - **Luminance Palette**: Displayed as a continuous gradient scale representing the tonal range from dark to light.
-    Can contain any number of colors, but at least 2, explicitly, which are ordered by their luminance value. Palette colors are interpolated linearily between the explicit colors.
+    Can contain any number of colors, but at least 2, explicitly, which are ordered by their luminance value. Palette colors are interpolated linearly between the explicit colors.
   - **Hue Palette**: Displayed as individual color swatches representing distinct hues for color mapping
 - Default palette: Nord Theme
   - Luminance components: Polar Night (dark blue shades) and Snow Storm (light gray/white shades)
@@ -72,7 +72,7 @@ The application processes images in three stages:
 - **Constants**:
   - Threshold
 - **Process**:
-  - Determines wether the grayScaleDistance is lower than the threshold or not.
+  - Determines whether the grayScaleDistance is lower than the threshold or not.
 - **Returns**
   - True / False
 
@@ -92,7 +92,7 @@ The application processes images in three stages:
 - **Constants**:
   - Threshold
 - **Process**:
-  - Determines wether the hueDistance is lower than the Threshold or not.
+  - Determines whether the hueDistance is lower than the Threshold or not.
 - **Returns**
   - True / False
 
@@ -112,7 +112,7 @@ The application processes images in three stages:
 - **Constants**:
   - Threshold
 - **Process**:
-  - Determines wether the slDistance is lower than the Threshold or not.
+  - Determines whether the slDistance is lower than the Threshold or not.
 - **Returns**
   - True / False
 
@@ -150,8 +150,8 @@ The application processes images in three stages:
   - Determine the luminance range of the input image
   - Determine the luminance range of the luminance palette
   - Adjust the luminance range of the input, by shifting and scaling the luminance values. Allow 5% outliers on each end (light and dark).
-    If the luminance range of the input image is longer then the luminance palette range, scale it down.
-    If the luminance range of the input image is shorter then the luminance palette range, do not scale it up, only shift it if necesarry.
+    If the luminance range of the input image is longer than the luminance palette range, scale it down.
+    If the luminance range of the input image is shorter than the luminance palette range, do not scale it up, only shift it if necessary.
 - **Constants**:
     - Percentage of allowed outliers (default: 5%)
 - **Outputs**:
@@ -169,7 +169,7 @@ The application processes images in three stages:
 - **Outputs**:
   - Luminance palette image: Pixel array with HSL values
 
-#### 4. Hue Clastering
+#### 4. Hue Clustering
 - **Inputs**:
   - Luminance adjusted image: Pixel array with HSL values
   - Hue palette (collection of distinct colors)

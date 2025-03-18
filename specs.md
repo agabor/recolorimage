@@ -5,8 +5,8 @@ A Vue.js application that transforms images by mapping their colors to a custom 
 
 ## Technology Stack
 - **Frontend Framework**: Vue.js 3 with Composition API
-- **Image Processing Libraries**:
-  - Jimp (JavaScript Image Manipulation Program) for pixel-level image manipulation
+- **Image Processing**:
+  - HTML5 Canvas API for pixel-level image manipulation
   - Chroma.js for color space conversions and manipulations
 - **Color Analysis**:
   - ml-kmeans for color clustering (https://www.npmjs.com/package/ml-kmeans)
@@ -165,12 +165,13 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 ## Implementation Notes
 
 1. **Performance Considerations**:
-   - Process images in a web worker to prevent UI freezing
+   - Use HTML5 Canvas API for efficient image processing
    - Implement progress tracking for each processing step
 
 2. **Error Handling**:
    - Validate image dimensions and file size before processing
    - Provide user feedback for processing errors
+   - Handle browser compatibility issues
 
 3. **Default Values**:
    - Grayscale threshold: 0.1
@@ -182,3 +183,4 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 4. **Testing**:
    - Test with various image types and sizes
    - Verify color mapping accuracy with sample images
+   - Ensure cross-browser compatibility

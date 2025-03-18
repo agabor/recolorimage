@@ -39,7 +39,7 @@ export function grayScaleDistance(rgbColor) {
  * @param {Number} threshold - Threshold value (default: 0.1)
  * @returns {Boolean} - True if color is effectively grayscale
  */
-export function isGrayScale(rgbColor, threshold = 0.1) {
+export function isGrayScale(rgbColor, threshold = 0.3) {
   return grayScaleDistance(rgbColor) < threshold;
 }
 
@@ -73,7 +73,7 @@ export function hueDistance(hslColor, huePalette) {
  * @param {Number} threshold - Threshold value in degrees (default: 15)
  * @returns {Boolean} - True if hue is close to a palette hue
  */
-export function isHueOnPalette(hslColor, huePalette, threshold = 15) {
+export function isHueOnPalette(hslColor, huePalette, threshold = 60) {
   return hueDistance(hslColor, huePalette) < threshold;
 }
 
@@ -108,7 +108,7 @@ export function slDistance(hslColor, huePalette) {
  * @param {Number} threshold - Threshold value (default: 0.2)
  * @returns {Boolean} - True if [s,l] is close to a palette color's [s,l]
  */
-export function isSlOnPalette(hslColor, huePalette, threshold = 0.2) {
+export function isSlOnPalette(hslColor, huePalette, threshold = 0.4) {
   return slDistance(hslColor, huePalette) < threshold;
 }
 

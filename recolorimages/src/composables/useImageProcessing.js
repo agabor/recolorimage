@@ -311,7 +311,8 @@ export function useImageProcessing() {
         sum + pixel.hsl[2], 0) / clusterPixels.length;
       
       // Get mapped color's saturation and lightness
-      const mappedHsl = colorUtils.rgbToHsl(colorUtils.hslToRgb(mappedColor));
+      // Convert hex color string to HSL directly
+      const mappedHsl = chroma(mappedColor).hsl();
       const mappedSaturation = mappedHsl[1];
       const mappedLightness = mappedHsl[2];
       
@@ -376,7 +377,8 @@ export function useImageProcessing() {
       const lightnessScale = lightnessMapping.get(closestCluster) || 1;
       
       // Get mapped hue
-      const mappedHsl = colorUtils.rgbToHsl(colorUtils.hslToRgb(mappedColor));
+      // Convert hex color string to HSL directly
+      const mappedHsl = chroma(mappedColor).hsl();
       const mappedHue = mappedHsl[0];
       
       // Apply adjustments

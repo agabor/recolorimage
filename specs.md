@@ -73,7 +73,7 @@ The application processes images in three stages:
   - Threshold
 - **Process**:
   - Determines whether the grayScaleDistance is lower than the threshold or not.
-- **Returns**
+- **Returns**:
   - True / False
 
 #### hueDistance
@@ -93,7 +93,7 @@ The application processes images in three stages:
   - Threshold
 - **Process**:
   - Determines whether the hueDistance is lower than the Threshold or not.
-- **Returns**
+- **Returns**:
   - True / False
 
 #### slDistance
@@ -113,21 +113,21 @@ The application processes images in three stages:
   - Threshold
 - **Process**:
   - Determines whether the slDistance is lower than the Threshold or not.
-- **Returns**
+- **Returns**:
   - True / False
 
 #### isHueMappable
 - **Params**:
     - A HSL color value
     - The hue palette
-- **Returns**
+- **Returns**:
   - !isGrayScale && isHueOnPalette && isSlOnPalette
  
 #### blendFactor
 - **Params**:
     - A HSL color value
     - The hue palette
-- **Returns**
+- **Returns**:
   - A linear combination of grayScaleDistance, hueDistance and slDistance
 
 ### Processing steps
@@ -149,9 +149,9 @@ The application processes images in three stages:
 - **Process**:
   - Determine the luminance range of the input image
   - Determine the luminance range of the luminance palette
-  - Adjust the luminance range of the input, by shifting and scaling the luminance values. Allow 5% outliers on each end (light and dark).
-    If the luminance range of the input image is longer than the luminance palette range, scale it down.
-    If the luminance range of the input image is shorter than the luminance palette range, do not scale it up, only shift it if necessary.
+  - Adjust the luminance range of the input by shifting and scaling the luminance values. Allow 5% outliers on each end (light and dark).
+  - If the luminance range of the input image is longer than the luminance palette range, scale it down.
+  - If the luminance range of the input image is shorter than the luminance palette range, do not scale it up, only shift it if necessary.
 - **Constants**:
     - Percentage of allowed outliers (default: 5%)
 - **Outputs**:
@@ -175,10 +175,10 @@ The application processes images in three stages:
   - Hue palette (collection of distinct colors)
   - Number of hue classes
 - **Process**:
-  - Run K-means algorithm of the hue values of those pixels where isHueMappable returns true.
-  - Map the hue value of each class to the closes hue palette color.
-  - Calculate the average saturation level of each class, and calculate the ratio of it to the mapped colors saturation.
-  - Calculate the average lightness level of each class, and calculate the ratio of it to the mapped colors lightness.
+  - Run K-means algorithm on the hue values of those pixels where isHueMappable returns true.
+  - Map the hue value of each class to the closest hue palette color.
+  - Calculate the average saturation level of each class, and calculate the ratio of it to the mapped color's saturation.
+  - Calculate the average lightness level of each class, and calculate the ratio of it to the mapped color's lightness.
 - **Outputs**:
   - Hue mapping: Mapping from hue values to the hue palette colors.
   - Saturation mapping: assigns a saturation scale factor to each class. Mapping keys are the same as in Hue mapping.
@@ -191,7 +191,7 @@ The application processes images in three stages:
   - Lightness mapping
 - **Process**:
   - For each pixel:
-    - Find the 2 closest matching hue in mapping keys
+    - Find the 2 closest matching hues in mapping keys
     - Replace original hue with the weighted average of the two mapped hue values.
     - Calculate the weighted average of the mapped saturation scale values, and apply it to the saturation channel.
     - Calculate the weighted average of the mapped lightness scale values, and apply it to the lightness channel.
@@ -209,7 +209,7 @@ The application processes images in three stages:
 - **Outputs**:
   - Blended pixel array
 
-#### 5. Output Generation
+#### 7. Output Generation
 - **Inputs**:
   - Processed pixel array
 - **Process**:

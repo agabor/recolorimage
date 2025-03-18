@@ -677,6 +677,7 @@ export function useImageProcessing() {
     setCustomPalette,
     
     // Expose internal functions for testing
-    clusterHues
+    clusterHues,
+    adjustLuminanceRange
   };
 }

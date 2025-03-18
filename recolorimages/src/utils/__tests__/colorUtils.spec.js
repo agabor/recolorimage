@@ -140,10 +140,18 @@ describe('colorUtils', () => {
       });
     }
     
-    // Use the clusterHues function from useImageProcessing
+    // Use the useImageProcessing composable
     const imageProcessing = useImageProcessing();
+    
+    // First, adjust the luminance range as in the actual processing pipeline
+    const luminanceAdjustedArray = imageProcessing.adjustLuminanceRange(
+      hslArray,
+      colorUtils.DEFAULT_PALETTES.nord.luminance
+    );
+    
+    // Then cluster the hues
     const colorCount = 8; // Default color count from specs
-    const mappings = imageProcessing.clusterHues(hslArray, huePalette, colorCount);
+    const mappings = imageProcessing.clusterHues(luminanceAdjustedArray, huePalette, colorCount);
     
     // Get the mappings
     const { hueMapping, saturationMapping, lightnessMapping } = mappings;

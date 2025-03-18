@@ -678,6 +678,7 @@ export function useImageProcessing() {
     
     // Expose internal functions for testing
     clusterHues,
-    adjustLuminanceRange
+    adjustLuminanceRange,
+    adjustColors
   };
 }

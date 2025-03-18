@@ -184,6 +184,25 @@ describe('colorUtils', () => {
     
     // We'll just use the output canvas directly without additional visualization elements
     
+    // Count mappable pixels
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Convert RGB to HSL
+      const hsl = chroma([r, g, b]).hsl();
+      
+      // Check if the pixel is mappable
+      const rgbColor = [r, g, b];
+      const isMappable = colorUtils.isHueMappable(hsl, huePalette);
+      
+      if (isMappable) {
+        mappableCount++;
+      }
+    }
+    
+    // Step 1: Create a visualization of the hue clusters
     // Process each pixel for the output image
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
@@ -197,10 +216,6 @@ describe('colorUtils', () => {
       // Check if the pixel is mappable
       const rgbColor = [r, g, b];
       const isMappable = colorUtils.isHueMappable(hsl, huePalette);
-      
-      if (isMappable) {
-        mappableCount++;
-      }
       
       if (isMappable && clusterHueArray.length > 0) {
         // Find the closest cluster hue
@@ -254,15 +269,50 @@ describe('colorUtils', () => {
     const buffer = outputCanvas.toBuffer('image/png');
     fs.writeFileSync(outputPath, buffer);
     
+    // Step 2: Apply adjustColors and save to a separate file
+    // Define path for the color-adjusted image
+    const colorAdjustedPath = path.resolve(outputDir, 'astronaut_color_adjusted.png');
+    
+    // Apply adjustColors to the luminance-adjusted array
+    const colorAdjustedArray = imageProcessing.adjustColors(luminanceAdjustedArray, mappings);
+    
+    // Create a canvas for the color-adjusted image
+    const colorAdjustedCanvas = createCanvas(width, height);
+    const colorAdjustedCtx = colorAdjustedCanvas.getContext('2d');
+    const colorAdjustedImageData = colorAdjustedCtx.createImageData(width, height);
+    
+    // Convert the HSL array back to image data
+    colorAdjustedArray.forEach(pixel => {
+      const { x, y, hsl, alpha } = pixel;
+      const index = (y * width + x) * 4;
+      
+      const rgb = colorUtils.hslToRgb(hsl);
+      
+      colorAdjustedImageData.data[index] = Math.round(rgb[0]);
+      colorAdjustedImageData.data[index + 1] = Math.round(rgb[1]);
+      colorAdjustedImageData.data[index + 2] = Math.round(rgb[2]);
+      colorAdjustedImageData.data[index + 3] = alpha;
+    });
+    
+    // Put the color-adjusted image data on the canvas
+    colorAdjustedCtx.putImageData(colorAdjustedImageData, 0, 0);
+    
+    // Save the color-adjusted image
+    const colorAdjustedBuffer = colorAdjustedCanvas.toBuffer('image/png');
+    fs.writeFileSync(colorAdjustedPath, colorAdjustedBuffer);
+    
     // Verify the output file exists
     expect(fs.existsSync(outputPath)).toBe(true);
     
-    // Log the output path and explanation for reference
-    console.log(`Output image saved to: ${outputPath}`);
+    // Log the output paths and explanation for reference
+    console.log(`Hue clusters visualization saved to: ${outputPath}`);
+    console.log(`Color-adjusted image saved to: ${colorAdjustedPath}`);
     console.log(`Mappable pixels: ${mappableCount} out of ${totalPixels} (${(mappableCount/totalPixels*100).toFixed(2)}%)`);
-    console.log('Visualization shows:');
+    console.log('Hue clusters visualization shows:');
     console.log('- Mappable pixels: Colored according to their cluster mapping');
     console.log('- Non-mappable pixels: Shown in light gray');
+    console.log('Color-adjusted image shows:');
+    console.log('- All pixels after applying adjustColors function');
     
     // Print palette colors for reference
     console.log('Palette colors used:');

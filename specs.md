@@ -1,225 +1,184 @@
-# Project Name: Recolor Images
+# Recolor Images: Technical Specification
 
-## Description
-A tool that transforms images by mapping their colors to a custom palette through a dual-processing approach: luminance mapping and color adjustment.
+## Project Overview
+A Vue.js application that transforms images by mapping their colors to a custom palette using a dual-processing approach: luminance mapping and color adjustment.
 
-## Programming Stack
-- **Language**: JavaScript
-- **Framework**: Vue.js 3
-- **Framework options**:
-  - Composition API
-- **Image Processing**:
-  - Jimp (JavaScript Image Manipulation Program)
-  - Chroma.js (Color manipulation library)
-- **Clustering**:
-  - ml-kmeans (https://www.npmjs.com/package/ml-kmeans)
+## Technology Stack
+- **Frontend Framework**: Vue.js 3 with Composition API
+- **Image Processing Libraries**:
+  - Jimp (JavaScript Image Manipulation Program) for pixel-level image manipulation
+  - Chroma.js for color space conversions and manipulations
+- **Color Analysis**:
+  - ml-kmeans for color clustering (https://www.npmjs.com/package/ml-kmeans)
+- **Build Tool**: Vite (as indicated by project structure)
 
-## Recoloring Process
-The application processes images in three stages:
-1. **Luminance Mapping**: Creates an intermediate image where colors are mapped by luminance to the luminance palette
-2. **Color Adjustment**: Creates an intermediate image where each pixel's color is adjusted based on the hue palette
-3. **Blending**: Produces the final image as a per-pixel linear combination of the two intermediate images
+## Application Structure
+Implement all processing steps as Vue 3 composables for modularity and reusability.
 
-## UI Specification
+## User Interface Components
 
-### Input Section
-- Drag-and-drop image upload area
-  - Shows preview of uploaded image
-  - Displays file name and size
-  - Supports common image formats (JPG, PNG, GIF, WEBP)
-  - Fallback button for manual file selection
+### 1. Image Upload Component
+- Drag-and-drop area for image upload
+- Preview of uploaded image with file name and size display
+- Supported formats: JPG, PNG
+- Fallback button for manual file selection
 
-### Color Palette Section
-- Two distinct palette components:
-  - **Luminance Palette**: Displayed as a continuous gradient scale representing the tonal range from dark to light.
-    Can contain any number of colors, but at least 2, explicitly, which are ordered by their luminance value. Palette colors are interpolated linearly between the explicit colors.
-  - **Hue Palette**: Displayed as individual color swatches representing distinct hues for color mapping
-- Default palette: Nord Theme
-  - Luminance components: Polar Night (dark blue shades) and Snow Storm (light gray/white shades)
-  - Hue components: Frost (blue accents) and Aurora (colorful accents)
-- Option to select alternative pre-defined palettes
-- Custom palette creation with color picker for both luminance gradient colors and individual hue colors
+### 2. Color Palette Components
+- **Luminance Palette**:
+  - Displayed as a continuous gradient from dark to light
+  - Minimum of 2 colors, ordered by luminance value
+  - Colors between explicit points are linearly interpolated
+  
+- **Hue Palette**:
+  - Displayed as individual color swatches
+  - Represents distinct hues for color mapping
 
-### Processing Controls
-- "Recolor" button to process the image
-- Processing options:
-  - Color count slider for limiting palette size
+- **Palette Selection**:
+  - Default: Nord Theme
+    - Luminance: Polar Night (dark blues) to Snow Storm (light grays/whites)
+    - Hue: Frost (blue accents) and Aurora (colorful accents)
+  - Pre-defined alternative palettes
+  - Custom palette creation with color pickers for both palette types
 
-### Output Section
-- Display of processed image
-- Download button for processed image
-- Option to view intermediate processing steps (luminance mapped and hue adjusted versions)
+### 3. Processing Controls
+- "Recolor" button to initiate processing
+- Color count slider to limit palette size
 
-### Additional UI Features
+### 4. Output Display
+- Processed image display
+- Download button for the processed image (PNG format)
+- Toggle to view intermediate processing steps (luminance-mapped and hue-adjusted versions)
+
+### 5. UI Features
 - Responsive design for desktop and mobile
 - Progress indicator for processing large images
 
-## Recoloring Process Detail
+## Color Processing Algorithm
 
-### Helper functions
+### Helper Functions
 
-#### grayScaleDistance
-- **Params**:
-    - An RGB color value
-- **Process**:
-  - Calculates the euclidean distance of the input color from its closest grayscale color.
-- **Returns**:
-  - The numerical distance.
+#### 1. grayScaleDistance(rgbColor)
+- **Input**: RGB color value [r, g, b]
+- **Output**: Numerical distance from closest grayscale color
+- **Implementation**: Calculate Euclidean distance between the color and its grayscale equivalent
 
-#### isGrayScale
-- **Params**:
-    - An RGB color value
-- **Constants**:
-  - Threshold
-- **Process**:
-  - Determines whether the grayScaleDistance is lower than the threshold or not.
-- **Returns**:
-  - True / False
+#### 2. isGrayScale(rgbColor, threshold)
+- **Input**: RGB color value [r, g, b], threshold value
+- **Output**: Boolean (true if color is effectively grayscale)
+- **Implementation**: Return true if grayScaleDistance < threshold
 
-#### hueDistance
-- **Params**:
-    - A HSL color value
-    - The hue palette
-- **Process**:
-  - Calculates the difference of the hue value of the input color from the closest hue value on the hue palette.
-- **Returns**:
-  - The numerical difference (absolute value).
+#### 3. hueDistance(hslColor, huePalette)
+- **Input**: HSL color value [h, s, l], array of hue palette colors
+- **Output**: Minimum absolute difference between input hue and any palette hue
+- **Implementation**: Find minimum absolute difference between hue values
 
-#### isHueOnPalette
-- **Params**:
-    - A HSL color value
-    - The hue palette
-- **Constants**:
-  - Threshold
-- **Process**:
-  - Determines whether the hueDistance is lower than the Threshold or not.
-- **Returns**:
-  - True / False
+#### 4. isHueOnPalette(hslColor, huePalette, threshold)
+- **Input**: HSL color value [h, s, l], hue palette, threshold value
+- **Output**: Boolean (true if hue is close to a palette hue)
+- **Implementation**: Return true if hueDistance < threshold
 
-#### slDistance
-- **Params**:
-    - A HSL color value
-    - The hue palette
-- **Process**:
-  - Calculates the minimal euclidean difference of the saturation and lightness value of the input color from the hue palette.
-- **Returns**:
-  - The numerical difference.
+#### 5. slDistance(hslColor, huePalette)
+- **Input**: HSL color value [h, s, l], hue palette
+- **Output**: Minimum Euclidean distance between [s,l] and any palette color's [s,l]
+- **Implementation**: Calculate minimum distance between saturation-lightness pairs
 
-#### isSlOnPalette
-- **Params**:
-    - A HSL color value
-    - The hue palette
-- **Constants**:
-  - Threshold
-- **Process**:
-  - Determines whether the slDistance is lower than the Threshold or not.
-- **Returns**:
-  - True / False
+#### 6. isSlOnPalette(hslColor, huePalette, threshold)
+- **Input**: HSL color value [h, s, l], hue palette, threshold value
+- **Output**: Boolean (true if [s,l] is close to a palette color's [s,l])
+- **Implementation**: Return true if slDistance < threshold
 
-#### isHueMappable
-- **Params**:
-    - A HSL color value
-    - The hue palette
-- **Returns**:
-  - !isGrayScale && isHueOnPalette && isSlOnPalette
- 
-#### blendFactor
-- **Params**:
-    - A HSL color value
-    - The hue palette
-- **Returns**:
-  - A linear combination of grayScaleDistance, hueDistance and slDistance
+#### 7. isHueMappable(hslColor, huePalette)
+- **Input**: HSL color value [h, s, l], hue palette
+- **Output**: Boolean (true if color can be mapped to hue palette)
+- **Implementation**: Return !isGrayScale(hslColor) && isHueOnPalette(hslColor, huePalette) && isSlOnPalette(hslColor, huePalette)
 
-### Processing steps
+#### 8. blendFactor(hslColor, huePalette)
+- **Input**: HSL color value [h, s, l], hue palette
+- **Output**: Value between 0 and 1 determining blend ratio
+- **Implementation**: Calculate weighted combination of grayScaleDistance, hueDistance, and slDistance
+
+### Processing Pipeline
 
 #### 1. Image Preparation
-- **Inputs**: 
-  - Original image (user uploaded)
+- **Input**: Original image file
 - **Process**:
   - Convert image to pixel array
-  - Extract RGB values for each pixel
-  - Convert RGB values to HSL (Hue, Saturation, Lightness) color space
-- **Outputs**:
-  - Original HSL image: Pixel array with HSL values
- 
-#### 2. Luminance level adjustment
-- **Inputs**: 
-  - Original HSL image: Pixel array with HSL values
-  - Luminance palette
+  - Convert RGB values to HSL color space for each pixel
+- **Output**: Original HSL image (pixel array with HSL values)
+
+#### 2. Luminance Range Adjustment
+- **Input**: Original HSL image, luminance palette
 - **Process**:
-  - Determine the luminance range of the input image
-  - Determine the luminance range of the luminance palette
-  - Adjust the luminance range of the input by shifting and scaling the luminance values. Allow 5% outliers on each end (light and dark).
-  - If the luminance range of the input image is longer than the luminance palette range, scale it down.
-  - If the luminance range of the input image is shorter than the luminance palette range, do not scale it up, only shift it if necessary.
-- **Constants**:
-    - Percentage of allowed outliers (default: 5%)
-- **Outputs**:
-  - Luminance adjusted image: Pixel array with HSL values
+  - Determine luminance range of input image (allowing 5% outliers on each end)
+  - Determine luminance range of luminance palette
+  - If input range > palette range: scale down input range
+  - If input range < palette range: shift input range to fit within palette range (no scaling up)
+- **Output**: Luminance-adjusted HSL image
 
 #### 3. Luminance Mapping
-- **Inputs**:
-  - Luminance adjusted image
-  - Luminance palette
+- **Input**: Luminance-adjusted HSL image, luminance palette
 - **Process**:
   - For each pixel:
-    - Extract lightness (L) value 
-    - Look for the same lightness value on the luminance palette. Use linear interpolation to find color value for luminance levels that are in between explicit palette colors.
-    - Use color chosen from luminance palette on output image.
-- **Outputs**:
-  - Luminance palette image: Pixel array with HSL values
+    - Extract lightness (L) value
+    - Find corresponding color on luminance palette using linear interpolation
+    - Replace pixel with palette color
+- **Output**: Luminance-mapped image
 
 #### 4. Hue Clustering
-- **Inputs**:
-  - Luminance adjusted image: Pixel array with HSL values
-  - Hue palette (collection of distinct colors)
-  - Number of hue classes
+- **Input**: Luminance-adjusted HSL image, hue palette, number of hue classes
 - **Process**:
-  - Run K-means algorithm on the hue values of those pixels where isHueMappable returns true.
-  - Map the hue value of each class to the closest hue palette color.
-  - Calculate the average saturation level of each class, and calculate the ratio of it to the mapped color's saturation.
-  - Calculate the average lightness level of each class, and calculate the ratio of it to the mapped color's lightness.
-- **Outputs**:
-  - Hue mapping: Mapping from hue values to the hue palette colors.
-  - Saturation mapping: assigns a saturation scale factor to each class. Mapping keys are the same as in Hue mapping.
-  - Lightness mapping: assigns a lightness scale factor to each class. Mapping keys are the same as in Hue mapping.
+  - Filter pixels where isHueMappable returns true
+  - Run K-means clustering on hue values of filtered pixels
+  - For each cluster:
+    - Map cluster center hue to closest hue in palette
+    - Calculate average saturation and lightness of cluster
+    - Calculate saturation and lightness scale factors relative to mapped palette color
+- **Output**:
+  - Hue mapping: Map from cluster centers to palette hues
+  - Saturation mapping: Map from cluster centers to saturation scale factors
+  - Lightness mapping: Map from cluster centers to lightness scale factors
 
 #### 5. Color Adjustment
-- **Inputs**:
-  - Hue mapping
-  - Saturation mapping
-  - Lightness mapping
+- **Input**: Luminance-adjusted HSL image, hue/saturation/lightness mappings
 - **Process**:
   - For each pixel:
-    - Find the 2 closest matching hues in mapping keys
-    - Replace original hue with the weighted average of the two mapped hue values.
-    - Calculate the weighted average of the mapped saturation scale values, and apply it to the saturation channel.
-    - Calculate the weighted average of the mapped lightness scale values, and apply it to the lightness channel.
-- **Outputs**:
-  - Color-adjusted pixel array
+    - Find two closest cluster centers
+    - Calculate weighted average of mapped hues based on distance to cluster centers
+    - Apply weighted average of saturation and lightness scale factors
+- **Output**: Color-adjusted HSL image
 
-#### 6. Blending Stage
-- **Inputs**:
-  - Luminance-mapped pixel array
-  - Color-adjusted pixel array
+#### 6. Blending
+- **Input**: Luminance-mapped image, color-adjusted image
 - **Process**:
-  - For each pixel position:
-    - Apply linear interpolation between luminance-mapped and color-adjusted pixels
-    - Formula: FinalPixel = (LuminancePixel × (1-blendFactor)) + (HuePixel × blendFactor)
-- **Outputs**:
-  - Blended pixel array
+  - For each pixel:
+    - Calculate blend factor based on pixel properties
+    - Apply linear interpolation: FinalPixel = (LuminancePixel × (1-blendFactor)) + (ColorAdjustedPixel × blendFactor)
+- **Output**: Blended HSL image
 
 #### 7. Output Generation
-- **Inputs**:
-  - Processed pixel array
+- **Input**: Blended HSL image
 - **Process**:
+  - Convert HSL values back to RGB
   - Reconstruct image from pixel array
-  - Generate downloadable file
-- **Outputs**:
-  - Displayed image
-  - Downloadable image file
-- **Constants**:
-  - Output file format (default: PNG)
+- **Output**: Processed image (displayed and available for download as PNG)
 
-### Processing Implementation Details
-Implement all processing steps as Vue 3 composables.
+## Implementation Notes
+
+1. **Performance Considerations**:
+   - Process images in a web worker to prevent UI freezing
+   - Implement progress tracking for each processing step
+
+2. **Error Handling**:
+   - Validate image dimensions and file size before processing
+   - Provide user feedback for processing errors
+
+3. **Default Values**:
+   - Grayscale threshold: 0.1
+   - Hue distance threshold: 15 (in degrees)
+   - SL distance threshold: 0.2
+   - Outlier percentage: 5%
+   - Default color count: 8
+
+4. **Testing**:
+   - Test with various image types and sizes
+   - Verify color mapping accuracy with sample images

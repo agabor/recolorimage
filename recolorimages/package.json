@@ -13,6 +13,9 @@
 		"deploy": "npm run build && wrangler pages deploy ./dist"
 	},
 	"dependencies": {
+		"chroma-js": "^3.1.2",
+		"jimp": "^1.6.0",
+		"ml-kmeans": "^6.0.0",
 		"vue": "^3.5.13"
 	},
 	"devDependencies": {

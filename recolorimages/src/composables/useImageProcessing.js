@@ -2,7 +2,6 @@
  * Image processing composable for recoloring images
  */
 import { ref, computed, reactive } from 'vue';
-import Jimp from 'jimp';
 import { kmeans } from 'ml-kmeans';
 import chroma from 'chroma-js';
 import * as colorUtils from '../utils/colorUtils';
@@ -35,6 +34,118 @@ export function useImageProcessing() {
   });
   
   /**
+   * Create an image element from a file
+   * @param {File} file - Image file
+   * @returns {Promise<HTMLImageElement>} - Promise that resolves to an image element
+   */
+  const createImageFromFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      
+      img.onload = () => {
+        resolve(img);
+        URL.revokeObjectURL(url);
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load image'));
+        URL.revokeObjectURL(url);
+      };
+      
+      img.src = url;
+    });
+  };
+  
+  /**
+   * Create a canvas from an image
+   * @param {HTMLImageElement} img - Image element
+   * @returns {HTMLCanvasElement} - Canvas element
+   */
+  const createCanvasFromImage = (img) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    
+    return canvas;
+  };
+  
+  /**
+   * Get pixel data from a canvas
+   * @param {HTMLCanvasElement} canvas - Canvas element
+   * @returns {ImageData} - Pixel data
+   */
+  const getPixelData = (canvas) => {
+    const ctx = canvas.getContext('2d');
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  };
+  
+  /**
+   * Convert pixel data to HSL array
+   * @param {ImageData} pixelData - Pixel data
+   * @returns {Array} - Array of HSL pixel values
+   */
+  const pixelDataToHslArray = (pixelData) => {
+    const { data, width, height } = pixelData;
+    const hslArray = [];
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      
+      const x = (i / 4) % width;
+      const y = Math.floor((i / 4) / width);
+      
+      const hsl = colorUtils.rgbToHsl([r, g, b]);
+      
+      hslArray.push({
+        x,
+        y,
+        hsl,
+        alpha: a
+      });
+    }
+    
+    return hslArray;
+  };
+  
+  /**
+   * Convert HSL array to canvas
+   * @param {Array} hslArray - Array of HSL pixel values
+   * @param {Number} width - Canvas width
+   * @param {Number} height - Canvas height
+   * @returns {HTMLCanvasElement} - Canvas element
+   */
+  const hslArrayToCanvas = (hslArray, width, height) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    
+    hslArray.forEach(pixel => {
+      const { x, y, hsl, alpha } = pixel;
+      const index = (y * width + x) * 4;
+      
+      const rgb = colorUtils.hslToRgb(hsl);
+      
+      imageData.data[index] = Math.round(rgb[0]);
+      imageData.data[index + 1] = Math.round(rgb[1]);
+      imageData.data[index + 2] = Math.round(rgb[2]);
+      imageData.data[index + 3] = alpha;
+    });
+    
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  };
+  
+  /**
    * Load an image from a file
    * @param {File} file - Image file
    * @returns {Promise} - Promise that resolves when the image is loaded
@@ -45,83 +156,24 @@ export function useImageProcessing() {
       isProcessing.value = true;
       progress.value = 10;
       
-      // Read the file as an ArrayBuffer
-      const buffer = await file.arrayBuffer();
+      const img = await createImageFromFile(file);
+      const canvas = createCanvasFromImage(img);
       
-      // Load the image using Jimp
-      const image = await Jimp.read(Buffer.from(buffer));
-      originalImage.value = image;
+      originalImage.value = {
+        element: img,
+        canvas,
+        width: img.width,
+        height: img.height
+      };
       
       progress.value = 100;
       isProcessing.value = false;
-      return image;
+      return originalImage.value;
     } catch (err) {
       error.value = `Failed to load image: ${err.message}`;
       isProcessing.value = false;
       throw err;
     }
-  };
-  
-  /**
-   * Convert Jimp image to HSL pixel array
-   * @param {Jimp} image - Jimp image
-   * @returns {Array} - Array of HSL pixel values
-   */
-  const imageToHslArray = (image) => {
-    const width = image.getWidth();
-    const height = image.getHeight();
-    const hslArray = [];
-    
-    // Iterate through each pixel
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        // Get pixel color (RGBA)
-        const rgba = Jimp.intToRGBA(image.getPixelColor(x, y));
-        const rgb = [rgba.r, rgba.g, rgba.b];
-        
-        // Convert to HSL
-        const hsl = colorUtils.rgbToHsl(rgb);
-        hslArray.push({
-          x,
-          y,
-          hsl,
-          alpha: rgba.a
-        });
-      }
-    }
-    
-    return hslArray;
-  };
-  
-  /**
-   * Convert HSL pixel array back to Jimp image
-   * @param {Array} hslArray - Array of HSL pixel values
-   * @param {Jimp} templateImage - Template image for dimensions
-   * @returns {Jimp} - Jimp image
-   */
-  const hslArrayToImage = (hslArray, templateImage) => {
-    const width = templateImage.getWidth();
-    const height = templateImage.getHeight();
-    const image = new Jimp(width, height);
-    
-    // Iterate through each pixel
-    hslArray.forEach(pixel => {
-      const { x, y, hsl, alpha } = pixel;
-      
-      // Convert HSL back to RGB
-      const rgb = colorUtils.hslToRgb(hsl);
-      
-      // Set pixel color
-      const rgba = Jimp.rgbaToInt(
-        Math.round(rgb[0]),
-        Math.round(rgb[1]),
-        Math.round(rgb[2]),
-        alpha
-      );
-      image.setPixelColor(rgba, x, y);
-    });
-    
-    return image;
   };
   
   /**
@@ -381,9 +433,12 @@ export function useImageProcessing() {
       isProcessing.value = true;
       progress.value = 0;
       
+      const { canvas, width, height } = originalImage.value;
+      
       // Step 1: Image Preparation
       progress.value = 10;
-      const hslArray = imageToHslArray(originalImage.value);
+      const pixelData = getPixelData(canvas);
+      const hslArray = pixelDataToHslArray(pixelData);
       
       // Step 2: Luminance Range Adjustment
       progress.value = 20;
@@ -400,10 +455,11 @@ export function useImageProcessing() {
       );
       
       // Create luminance-mapped image
-      luminanceMappedImage.value = hslArrayToImage(
-        luminanceMappedArray,
-        originalImage.value
-      );
+      luminanceMappedImage.value = {
+        canvas: hslArrayToCanvas(luminanceMappedArray, width, height),
+        width,
+        height
+      };
       
       // Step 4: Hue Clustering
       progress.value = 60;
@@ -421,10 +477,11 @@ export function useImageProcessing() {
       );
       
       // Create color-adjusted image
-      colorAdjustedImage.value = hslArrayToImage(
-        colorAdjustedArray,
-        originalImage.value
-      );
+      colorAdjustedImage.value = {
+        canvas: hslArrayToCanvas(colorAdjustedArray, width, height),
+        width,
+        height
+      };
       
       // Step 6: Blending
       progress.value = 80;
@@ -436,10 +493,11 @@ export function useImageProcessing() {
       
       // Step 7: Output Generation
       progress.value = 90;
-      processedImage.value = hslArrayToImage(
-        blendedArray,
-        originalImage.value
-      );
+      processedImage.value = {
+        canvas: hslArrayToCanvas(blendedArray, width, height),
+        width,
+        height
+      };
       
       progress.value = 100;
       isProcessing.value = false;
@@ -454,65 +512,64 @@ export function useImageProcessing() {
   
   /**
    * Get the processed image as a data URL
-   * @returns {Promise<string>} - Promise that resolves to a data URL
+   * @returns {string} - Data URL
    */
-  const getProcessedImageUrl = async () => {
+  const getProcessedImageUrl = () => {
     if (!processedImage.value) {
       return null;
     }
     
-    return await processedImage.value.getBase64Async(Jimp.MIME_PNG);
+    return processedImage.value.canvas.toDataURL('image/png');
   };
   
   /**
    * Get the original image as a data URL
-   * @returns {Promise<string>} - Promise that resolves to a data URL
+   * @returns {string} - Data URL
    */
-  const getOriginalImageUrl = async () => {
+  const getOriginalImageUrl = () => {
     if (!originalImage.value) {
       return null;
     }
     
-    return await originalImage.value.getBase64Async(Jimp.MIME_PNG);
+    return originalImage.value.canvas.toDataURL('image/png');
   };
   
   /**
    * Get the luminance-mapped image as a data URL
-   * @returns {Promise<string>} - Promise that resolves to a data URL
+   * @returns {string} - Data URL
    */
-  const getLuminanceMappedImageUrl = async () => {
+  const getLuminanceMappedImageUrl = () => {
     if (!luminanceMappedImage.value) {
       return null;
     }
     
-    return await luminanceMappedImage.value.getBase64Async(Jimp.MIME_PNG);
+    return luminanceMappedImage.value.canvas.toDataURL('image/png');
   };
   
   /**
    * Get the color-adjusted image as a data URL
-   * @returns {Promise<string>} - Promise that resolves to a data URL
+   * @returns {string} - Data URL
    */
-  const getColorAdjustedImageUrl = async () => {
+  const getColorAdjustedImageUrl = () => {
     if (!colorAdjustedImage.value) {
       return null;
     }
     
-    return await colorAdjustedImage.value.getBase64Async(Jimp.MIME_PNG);
+    return colorAdjustedImage.value.canvas.toDataURL('image/png');
   };
   
   /**
    * Download the processed image
    * @param {string} filename - Filename for the downloaded image
-   * @returns {Promise} - Promise that resolves when the download is initiated
    */
-  const downloadProcessedImage = async (filename = 'recolored-image.png') => {
+  const downloadProcessedImage = (filename = 'recolored-image.png') => {
     if (!processedImage.value) {
       error.value = 'No processed image available';
       return;
     }
     
     try {
-      const dataUrl = await getProcessedImageUrl();
+      const dataUrl = getProcessedImageUrl();
       
       // Create a download link
       const link = document.createElement('a');
@@ -563,9 +620,9 @@ export function useImageProcessing() {
     }
     
     return {
-      width: originalImage.value.getWidth(),
-      height: originalImage.value.getHeight(),
-      format: originalImage.value.getMIME()
+      width: originalImage.value.width,
+      height: originalImage.value.height,
+      format: 'image/png'
     };
   });
   

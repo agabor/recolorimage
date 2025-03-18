@@ -69,15 +69,15 @@ const handleDownload = () => {
 };
 
 // Update image URLs
-const updateImageUrls = async () => {
+const updateImageUrls = () => {
   if (hasImage.value) {
-    originalImageUrl.value = await getOriginalImageUrl();
+    originalImageUrl.value = getOriginalImageUrl();
   }
   
   if (hasProcessedImage.value) {
-    processedImageUrl.value = await getProcessedImageUrl();
-    luminanceMappedImageUrl.value = await getLuminanceMappedImageUrl();
-    colorAdjustedImageUrl.value = await getColorAdjustedImageUrl();
+    processedImageUrl.value = getProcessedImageUrl();
+    luminanceMappedImageUrl.value = getLuminanceMappedImageUrl();
+    colorAdjustedImageUrl.value = getColorAdjustedImageUrl();
   }
 };
 
@@ -143,7 +143,7 @@ watch(error, (newError) => {
     </main>
     
     <footer>
-      <p>Built with Vue.js, Jimp, and Chroma.js</p>
+      <p>Built with Vue.js, Canvas API, and Chroma.js</p>
     </footer>
   </div>
 </template>

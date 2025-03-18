@@ -674,6 +674,9 @@ export function useImageProcessing() {
     getColorAdjustedImageUrl,
     downloadProcessedImage,
     setPalette,
-    setCustomPalette
+    setCustomPalette,
+    
+    // Expose internal functions for testing
+    clusterHues
   };
 }

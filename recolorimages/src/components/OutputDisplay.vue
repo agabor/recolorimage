@@ -10,6 +10,10 @@ const props = defineProps({
     type: String,
     default: null
   },
+  luminanceAdjustedImageUrl: {
+    type: String,
+    default: null
+  },
   luminanceMappedImageUrl: {
     type: String,
     default: null
@@ -85,6 +89,15 @@ const imageDimensions = computed(() => {
         <template v-if="showIntermediateSteps">
           <button 
             class="tab-btn" 
+            :class="{ active: activeTab === 'luminanceAdjusted' }"
+            @click="activeTab = 'luminanceAdjusted'"
+            :disabled="!luminanceAdjustedImageUrl"
+          >
+            Luminance Adjusted
+          </button>
+          
+          <button 
+            class="tab-btn" 
             :class="{ active: activeTab === 'luminance' }"
             @click="activeTab = 'luminance'"
             :disabled="!luminanceMappedImageUrl"
@@ -115,6 +128,13 @@ const imageDimensions = computed(() => {
           v-else-if="activeTab === 'processed' && processedImageUrl" 
           :src="processedImageUrl" 
           alt="Processed Image"
+          class="display-image"
+        />
+        
+        <img 
+          v-else-if="activeTab === 'luminanceAdjusted' && luminanceAdjustedImageUrl" 
+          :src="luminanceAdjustedImageUrl" 
+          alt="Luminance Adjusted Image"
           class="display-image"
         />
         

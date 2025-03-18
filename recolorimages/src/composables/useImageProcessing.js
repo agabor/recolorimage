@@ -10,6 +10,7 @@ export function useImageProcessing() {
   // State
   const originalImage = ref(null);
   const processedImage = ref(null);
+  const luminanceAdjustedImage = ref(null);
   const luminanceMappedImage = ref(null);
   const colorAdjustedImage = ref(null);
   const isProcessing = ref(false);
@@ -447,6 +448,13 @@ export function useImageProcessing() {
         selectedPalette.luminance
       );
       
+      // Create luminance-adjusted image
+      luminanceAdjustedImage.value = {
+        canvas: hslArrayToCanvas(luminanceAdjustedArray, width, height),
+        width,
+        height
+      };
+      
       // Step 3: Luminance Mapping
       progress.value = 40;
       const luminanceMappedArray = mapLuminance(
@@ -547,6 +555,18 @@ export function useImageProcessing() {
   };
   
   /**
+   * Get the luminance-adjusted image as a data URL
+   * @returns {string} - Data URL
+   */
+  const getLuminanceAdjustedImageUrl = () => {
+    if (!luminanceAdjustedImage.value) {
+      return null;
+    }
+    
+    return luminanceAdjustedImage.value.canvas.toDataURL('image/png');
+  };
+  
+  /**
    * Get the color-adjusted image as a data URL
    * @returns {string} - Data URL
    */
@@ -630,6 +650,7 @@ export function useImageProcessing() {
     // State
     originalImage,
     processedImage,
+    luminanceAdjustedImage,
     luminanceMappedImage,
     colorAdjustedImage,
     isProcessing,
@@ -648,6 +669,7 @@ export function useImageProcessing() {
     processImage,
     getProcessedImageUrl,
     getOriginalImageUrl,
+    getLuminanceAdjustedImageUrl,
     getLuminanceMappedImageUrl,
     getColorAdjustedImageUrl,
     downloadProcessedImage,

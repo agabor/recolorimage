@@ -20,6 +20,7 @@ const {
   processImage,
   getOriginalImageUrl,
   getProcessedImageUrl,
+  getLuminanceAdjustedImageUrl,
   getLuminanceMappedImageUrl,
   getColorAdjustedImageUrl,
   downloadProcessedImage,
@@ -30,6 +31,7 @@ const {
 // Image URLs for display
 const originalImageUrl = ref(null);
 const processedImageUrl = ref(null);
+const luminanceAdjustedImageUrl = ref(null);
 const luminanceMappedImageUrl = ref(null);
 const colorAdjustedImageUrl = ref(null);
 
@@ -76,6 +78,7 @@ const updateImageUrls = () => {
   
   if (hasProcessedImage.value) {
     processedImageUrl.value = getProcessedImageUrl();
+    luminanceAdjustedImageUrl.value = getLuminanceAdjustedImageUrl();
     luminanceMappedImageUrl.value = getLuminanceMappedImageUrl();
     colorAdjustedImageUrl.value = getColorAdjustedImageUrl();
   }
@@ -132,6 +135,7 @@ watch(error, (newError) => {
           <OutputDisplay 
             :original-image-url="originalImageUrl"
             :processed-image-url="processedImageUrl"
+            :luminance-adjusted-image-url="luminanceAdjustedImageUrl"
             :luminance-mapped-image-url="luminanceMappedImageUrl"
             :color-adjusted-image-url="colorAdjustedImageUrl"
             :image-info="imageInfo"

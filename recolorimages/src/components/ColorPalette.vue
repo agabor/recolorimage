@@ -13,8 +13,9 @@ const emit = defineEmits(['update:palette', 'custom-palette']);
 
 const palettes = ref(Object.keys(DEFAULT_PALETTES));
 const selectedPaletteName = ref(props.selectedPalette.name);
-const customLuminancePalette = ref([...props.selectedPalette.luminance]);
-const customHuePalette = ref([...props.selectedPalette.hue]);
+// Convert chroma.Color objects to hex strings for the color pickers
+const customLuminancePalette = ref([...props.selectedPalette.luminance].map(color => color.hex()));
+const customHuePalette = ref([...props.selectedPalette.hue].map(color => color.hex()));
 const isCustomizing = ref(false);
 
 // Watch for changes in the selected palette name
@@ -32,8 +33,9 @@ watch(() => props.selectedPalette.name, (newValue) => {
   selectedPaletteName.value = newValue;
   
   if (newValue === 'custom') {
-    customLuminancePalette.value = [...props.selectedPalette.luminance];
-    customHuePalette.value = [...props.selectedPalette.hue];
+    // Convert chroma.Color objects to hex strings for the color pickers
+    customLuminancePalette.value = [...props.selectedPalette.luminance].map(color => color.hex());
+    customHuePalette.value = [...props.selectedPalette.hue].map(color => color.hex());
   }
 });
 
@@ -43,7 +45,7 @@ const luminanceGradient = computed(() => {
   
   const stops = colors.map((color, index) => {
     const percent = (index / (colors.length - 1)) * 100;
-    return `${color} ${percent}%`;
+    return `${color.hex()} ${percent}%`;
   });
   
   return `linear-gradient(to right, ${stops.join(', ')})`;
@@ -70,9 +72,13 @@ const removeHueColor = (index) => {
 };
 
 const applyCustomPalette = () => {
+  // Convert hex strings back to chroma.Color objects
+  const luminanceColors = customLuminancePalette.value.map(hex => chroma(hex));
+  const hueColors = customHuePalette.value.map(hex => chroma(hex));
+  
   emit('custom-palette', {
-    luminance: [...customLuminancePalette.value],
-    hue: [...customHuePalette.value]
+    luminance: luminanceColors,
+    hue: hueColors
   });
 };
 
@@ -107,7 +113,7 @@ const cancelCustomization = () => {
             v-for="(color, index) in selectedPalette.hue" 
             :key="index"
             class="color-swatch"
-            :style="{ backgroundColor: color }"
+            :style="{ backgroundColor: color.hex() }"
           ></div>
         </div>
       </div>

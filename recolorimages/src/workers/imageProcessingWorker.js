@@ -40,6 +40,10 @@ self.onmessage = function(e) {
  * Process the image with the provided settings
  */
 function processImage(pixelData, width, height, luminancePalette, huePalette, settings) {
+  // Convert hex strings back to chroma.Color objects
+  luminancePalette = luminancePalette.map(hex => chroma(hex));
+  huePalette = huePalette.map(hex => chroma(hex));
+  
   // Step 1: Convert to HSL array
   self.postMessage({ progress: 10, status: 'Converting to HSL' });
   const hslArray = pixelDataToHslArray(pixelData, width, height);

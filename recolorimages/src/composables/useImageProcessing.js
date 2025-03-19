@@ -316,10 +316,9 @@ export function useImageProcessing() {
         // Convert ImageData to a plain array to avoid cloning issues
         const pixelDataArray = Array.from(pixelData.data);
         
-        // Create deep copies of the palettes to ensure they're cloneable
-        // This removes any reactive wrappers that Vue might have added
-        const luminancePaletteClone = JSON.parse(JSON.stringify(selectedPalette.luminance));
-        const huePaletteClone = JSON.parse(JSON.stringify(selectedPalette.hue));
+        // Convert chroma.Color objects to hex strings for cloning
+        const luminancePaletteClone = selectedPalette.luminance.map(color => color.hex());
+        const huePaletteClone = selectedPalette.hue.map(color => color.hex());
         
         // Create a plain object with the settings
         const settingsClone = {
@@ -449,17 +448,25 @@ export function useImageProcessing() {
     }
   };
   
-  /**
-   * Set a custom palette
-   * @param {Array} luminancePalette - Custom luminance palette
-   * @param {Array} huePalette - Custom hue palette
-   */
-  const setCustomPalette = (luminancePalette, huePalette) => {
-    selectedPalette.name = 'custom';
-    selectedPalette.luminance = luminancePalette;
-    selectedPalette.hue = huePalette;
-    selectedPalette.custom = true;
-  };
+/**
+ * Set a custom palette
+ * @param {Array} luminancePalette - Custom luminance palette (array of chroma.Color objects or hex strings)
+ * @param {Array} huePalette - Custom hue palette (array of chroma.Color objects or hex strings)
+ */
+const setCustomPalette = (luminancePalette, huePalette) => {
+  selectedPalette.name = 'custom';
+  
+  // Ensure all palette colors are chroma.Color objects
+  selectedPalette.luminance = luminancePalette.map(color => 
+    typeof color === 'string' ? chroma(color) : color
+  );
+  
+  selectedPalette.hue = huePalette.map(color => 
+    typeof color === 'string' ? chroma(color) : color
+  );
+  
+  selectedPalette.custom = true;
+};
   
   // Computed properties
   const hasImage = computed(() => !!originalImage.value);

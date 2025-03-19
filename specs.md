@@ -18,12 +18,14 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 ## User Interface Components
 
 ### 1. Image Upload Component
+**Implemented in**: `recolorimages/src/components/ImageUploader.vue`
 - Drag-and-drop area for image upload
 - Preview of uploaded image with file name and size display
 - Supported formats: JPG, PNG
 - Fallback button for manual file selection
 
 ### 2. Color Palette Components
+**Implemented in**: `recolorimages/src/components/ColorPalette.vue`
 - **Luminance Palette**:
   - Displayed as a continuous gradient from dark to light
   - Minimum of 2 colors, ordered by luminance value
@@ -37,14 +39,17 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
   - Default: Nord Theme
     - Luminance: Polar Night (dark blues) to Snow Storm (light grays/whites)
     - Hue: Frost (blue accents) and Aurora (colorful accents)
-  - Pre-defined alternative palettes
+  - Pre-defined alternative palettes (defined in `recolorimages/src/utils/colorUtils.js`)
   - Custom palette creation with color pickers for both palette types
 
 ### 3. Processing Controls
+**Implemented in**: `recolorimages/src/components/ProcessingControls.vue`
 - "Recolor" button to initiate processing
 - Color count slider to limit palette size
+- Advanced settings for thresholds and parameters
 
 ### 4. Output Display
+**Implemented in**: `recolorimages/src/components/OutputDisplay.vue`
 - Processed image display
 - Download button for the processed image (PNG format)
 - Toggle to view intermediate processing steps (luminance-mapped and hue-adjusted versions)
@@ -56,6 +61,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 ## Color Processing Algorithm
 
 ### Helper Functions
+**Implemented in**: `recolorimages/src/utils/colorUtils.js`
 
 #### 1. grayScaleDistance(rgbColor)
 - **Input**: RGB color value [r, g, b]
@@ -98,8 +104,12 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Implementation**: Calculate weighted combination of grayScaleDistance, hueDistance, and slDistance
 
 ### Processing Pipeline
+**Implemented in**: 
+- `recolorimages/src/composables/useImageProcessing.js` (main processing logic)
+- `recolorimages/src/workers/imageProcessingWorker.js` (CPU-intensive processing in a Web Worker)
 
 #### 1. Image Preparation
+**Implemented in**: `useImageProcessing.js` (loadImage, createImageFromFile, createCanvasFromImage, getPixelData) and `imageProcessingWorker.js` (pixelDataToHslArray)
 - **Input**: Original image file
 - **Process**:
   - Convert image to pixel array
@@ -107,6 +117,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Output**: Original HSL image (pixel array with HSL values)
 
 #### 2. Luminance Range Adjustment
+**Implemented in**: `imageProcessingWorker.js` (adjustLuminanceRange function)
 - **Input**: Original HSL image, luminance palette
 - **Process**:
   - Determine luminance range of input image (allowing 5% outliers on each end)
@@ -116,6 +127,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Output**: Luminance-adjusted HSL image
 
 #### 3. Luminance Mapping
+**Implemented in**: `imageProcessingWorker.js` (mapLuminance function)
 - **Input**: Luminance-adjusted HSL image, luminance palette
 - **Process**:
   - For each pixel:
@@ -125,6 +137,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Output**: Luminance-mapped image
 
 #### 4. Hue Clustering
+**Implemented in**: `imageProcessingWorker.js` (clusterHues function)
 - **Input**: Luminance-adjusted HSL image, hue palette, number of hue classes
 - **Process**:
   - Filter pixels where isHueMappable returns true
@@ -139,6 +152,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
   - Lightness mapping: Map from cluster centers to lightness scale factors
 
 #### 5. Color Adjustment
+**Implemented in**: `imageProcessingWorker.js` (adjustColors function)
 - **Input**: Luminance-adjusted HSL image, hue/saturation/lightness mappings
 - **Process**:
   - For each pixel:
@@ -148,6 +162,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Output**: Color-adjusted HSL image
 
 #### 6. Blending
+**Implemented in**: `imageProcessingWorker.js` (blendImages function)
 - **Input**: Luminance-mapped image, color-adjusted image
 - **Process**:
   - For each pixel:
@@ -156,6 +171,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Output**: Blended HSL image
 
 #### 7. Output Generation
+**Implemented in**: `imageProcessingWorker.js` (hslArrayToImageData) and `useImageProcessing.js` (getProcessedImageUrl, downloadProcessedImage)
 - **Input**: Blended HSL image
 - **Process**:
   - Convert HSL values back to RGB

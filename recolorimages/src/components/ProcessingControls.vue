@@ -24,18 +24,10 @@ const emit = defineEmits(['process', 'update:settings']);
 
 // Local copies of settings
 const colorCount = ref(props.settings.colorCount);
-const grayscaleThreshold = ref(props.settings.grayscaleThreshold);
-const hueDistanceThreshold = ref(props.settings.hueDistanceThreshold);
-const slDistanceThreshold = ref(props.settings.slDistanceThreshold);
-const outlierPercentage = ref(props.settings.outlierPercentage);
 
 // Watch for changes in settings from parent
 watch(() => props.settings, (newSettings) => {
   colorCount.value = newSettings.colorCount;
-  grayscaleThreshold.value = newSettings.grayscaleThreshold;
-  hueDistanceThreshold.value = newSettings.hueDistanceThreshold;
-  slDistanceThreshold.value = newSettings.slDistanceThreshold;
-  outlierPercentage.value = newSettings.outlierPercentage;
 }, { deep: true });
 
 // Update settings when local values change
@@ -43,30 +35,8 @@ watch(colorCount, (newValue) => {
   emit('update:settings', { ...props.settings, colorCount: newValue });
 });
 
-watch(grayscaleThreshold, (newValue) => {
-  emit('update:settings', { ...props.settings, grayscaleThreshold: newValue });
-});
-
-watch(hueDistanceThreshold, (newValue) => {
-  emit('update:settings', { ...props.settings, hueDistanceThreshold: newValue });
-});
-
-watch(slDistanceThreshold, (newValue) => {
-  emit('update:settings', { ...props.settings, slDistanceThreshold: newValue });
-});
-
-watch(outlierPercentage, (newValue) => {
-  emit('update:settings', { ...props.settings, outlierPercentage: newValue });
-});
-
 const handleProcess = () => {
   emit('process');
-};
-
-const showAdvancedSettings = ref(false);
-
-const toggleAdvancedSettings = () => {
-  showAdvancedSettings.value = !showAdvancedSettings.value;
 };
 </script>
 
@@ -94,66 +64,6 @@ const toggleAdvancedSettings = () => {
         <span v-if="isProcessing">Processing... {{ Math.round(progress) }}%</span>
         <span v-else>Recolor Image</span>
       </button>
-    </div>
-    
-    <div class="advanced-settings-toggle">
-      <button class="toggle-btn" @click="toggleAdvancedSettings">
-        {{ showAdvancedSettings ? 'Hide Advanced Settings' : 'Show Advanced Settings' }}
-      </button>
-    </div>
-    
-    <div v-if="showAdvancedSettings" class="advanced-settings">
-      <div class="setting-group">
-        <label for="grayscale-threshold">Grayscale Threshold: {{ grayscaleThreshold.toFixed(2) }}</label>
-        <input 
-          id="grayscale-threshold"
-          type="range" 
-          v-model.number="grayscaleThreshold" 
-          min="0.01" 
-          max="0.5" 
-          step="0.01"
-          :disabled="isProcessing || !hasImage"
-        />
-      </div>
-      
-      <div class="setting-group">
-        <label for="hue-distance">Hue Distance Threshold: {{ hueDistanceThreshold }}</label>
-        <input 
-          id="hue-distance"
-          type="range" 
-          v-model.number="hueDistanceThreshold" 
-          min="5" 
-          max="45" 
-          step="1"
-          :disabled="isProcessing || !hasImage"
-        />
-      </div>
-      
-      <div class="setting-group">
-        <label for="sl-distance">SL Distance Threshold: {{ slDistanceThreshold.toFixed(2) }}</label>
-        <input 
-          id="sl-distance"
-          type="range" 
-          v-model.number="slDistanceThreshold" 
-          min="0.05" 
-          max="0.5" 
-          step="0.01"
-          :disabled="isProcessing || !hasImage"
-        />
-      </div>
-      
-      <div class="setting-group">
-        <label for="outlier-percentage">Outlier Percentage: {{ outlierPercentage }}%</label>
-        <input 
-          id="outlier-percentage"
-          type="range" 
-          v-model.number="outlierPercentage" 
-          min="0" 
-          max="10" 
-          step="1"
-          :disabled="isProcessing || !hasImage"
-        />
-      </div>
     </div>
     
     <div v-if="isProcessing" class="progress-bar-container">
@@ -231,29 +141,6 @@ const toggleAdvancedSettings = () => {
 .process-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
-}
-
-.advanced-settings-toggle {
-  margin: 1rem 0;
-}
-
-.toggle-btn {
-  background: none;
-  border: none;
-  color: #4CAF50;
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 0;
-  text-decoration: underline;
-}
-
-.advanced-settings {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #ddd;
 }
 
 .progress-bar-container {

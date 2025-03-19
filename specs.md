@@ -51,7 +51,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 
 ### 5. UI Features
 - Responsive design for desktop and mobile
-- Progress indicator for processing large images
+- Progress indicator for processing all images
 
 ## Color Processing Algorithm
 
@@ -167,6 +167,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 1. **Performance Considerations**:
    - Use HTML5 Canvas API for efficient image processing
    - Implement progress tracking for each processing step
+   - Use Web Workers for CPU-intensive image processing to prevent UI freezing
 
 2. **Error Handling**:
    - Validate image dimensions and file size before processing

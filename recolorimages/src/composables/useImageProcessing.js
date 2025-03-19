@@ -1,10 +1,15 @@
 /**
  * Image processing composable for recoloring images
+ * Uses a Web Worker for heavy processing to prevent UI freezing
  */
-import { ref, computed, reactive } from 'vue';
-import { kmeans } from 'ml-kmeans';
+import { ref, computed, reactive, onUnmounted } from 'vue';
 import chroma from 'chroma-js';
 import * as colorUtils from '../utils/colorUtils';
+
+// Create a new worker
+const createWorker = () => {
+  return new Worker(new URL('../workers/imageProcessingWorker.js', import.meta.url), { type: 'module' });
+};
 
 export function useImageProcessing() {
   // State
@@ -177,347 +182,170 @@ export function useImageProcessing() {
     }
   };
   
+  // Note: All image processing functions have been moved to the Web Worker
+  // to prevent UI freezing during heavy computations
+  
+  // Worker instance
+  let worker = null;
+  
+  // Create a worker instance when needed
+  const getWorker = () => {
+    if (!worker) {
+      worker = createWorker();
+    }
+    return worker;
+  };
+  
+  // Clean up worker on component unmount
+  onUnmounted(() => {
+    if (worker) {
+      worker.terminate();
+      worker = null;
+    }
+  });
+  
   /**
-   * Adjust the luminance range of an HSL image
-   * @param {Array} hslArray - Array of HSL pixel values
-   * @param {Array} luminancePalette - Array of luminance palette colors
-   * @returns {Array} - Adjusted HSL pixel array
+   * Create a canvas from ImageData
+   * @param {Object} imageData - Object with data (Array), width, and height
+   * @returns {HTMLCanvasElement} - Canvas element
    */
-  const adjustLuminanceRange = (hslArray, luminancePalette) => {
-    // Calculate luminance range of input image
-    const inputRange = colorUtils.calculateLuminanceRange(
-      hslArray.map(pixel => pixel.hsl),
-      settings.outlierPercentage
+  const createCanvasFromImageData = (imageData) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Convert the regular Array back to a Uint8ClampedArray
+    const typedData = new Uint8ClampedArray(imageData.data);
+    
+    const imgData = new ImageData(
+      typedData, 
+      imageData.width, 
+      imageData.height
     );
     
-    // Calculate luminance range of palette
-    const paletteLightness = luminancePalette.map(color => {
-      try {
-        return chroma(color).get('hsl.l');
-      } catch (err) {
-        console.error('Error converting color:', color, err);
-        return 0;
-      }
-    });
-    const paletteRange = {
-      min: Math.min(...paletteLightness),
-      max: Math.max(...paletteLightness)
-    };
-    
-    // Calculate input range width
-    const inputRangeWidth = inputRange.max - inputRange.min;
-    const paletteRangeWidth = paletteRange.max - paletteRange.min;
-    
-    // Create a new array with adjusted lightness
-    return hslArray.map(pixel => {
-      const [h, s, l] = pixel.hsl;
-      let adjustedL = l;
-      
-      // If input range > palette range: scale down
-      if (inputRangeWidth > paletteRangeWidth) {
-        // Scale down
-        const scaleFactor = paletteRangeWidth / inputRangeWidth;
-        adjustedL = paletteRange.min + (l - inputRange.min) * scaleFactor;
-      } else {
-        // Shift (no scaling up)
-        // Center the input range within the palette range
-        const shift = (paletteRange.min + paletteRange.max - inputRange.min - inputRange.max) / 2;
-        adjustedL = l + shift;
-        
-        // Clamp to palette range
-        adjustedL = Math.max(paletteRange.min, Math.min(paletteRange.max, adjustedL));
-      }
-      
-      return {
-        ...pixel,
-        hsl: [h, s, adjustedL]
-      };
-    });
+    ctx.putImageData(imgData, 0, 0);
+    return canvas;
   };
   
   /**
-   * Map pixels to luminance palette
-   * @param {Array} hslArray - Array of HSL pixel values
-   * @param {Array} luminancePalette - Array of luminance palette colors
-   * @returns {Array} - Mapped HSL pixel array
-   */
-  const mapLuminance = (hslArray, luminancePalette) => {
-    return hslArray.map(pixel => {
-      const [h, s, l] = pixel.hsl;
-      
-      // Find corresponding color on luminance palette
-      const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
-      const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
-      
-      return {
-        ...pixel,
-        hsl: mappedHsl
-      };
-    });
-  };
-  
-  /**
-   * Cluster hues and create mappings
-   * @param {Array} hslArray - Array of HSL pixel values
-   * @param {Array} huePalette - Array of hue palette colors
-   * @param {Number} colorCount - Number of color clusters
-   * @returns {Object} - Mappings for hue, saturation, and lightness
-   */
-  const clusterHues = (hslArray, huePalette, colorCount) => {
-    // Filter pixels that are mappable to hue palette
-    const mappablePixels = hslArray.filter(pixel => 
-      colorUtils.isHueMappable(pixel.hsl, huePalette)
-    );
-    
-    // If no mappable pixels, return empty mappings
-    if (mappablePixels.length === 0) {
-      return {
-        hueMapping: new Map(),
-        saturationMapping: new Map(),
-        lightnessMapping: new Map()
-      };
-    }
-    
-    // Extract hue values for clustering
-    const hueValues = mappablePixels.map(pixel => [pixel.hsl[0]]);
-    
-    // Run K-means clustering on hue values
-    const clusterCount = Math.min(colorCount, mappablePixels.length);
-    const { clusters, centroids } = kmeans(hueValues, clusterCount);
-    
-    // Create mappings
-    const hueMapping = new Map();
-    const saturationMapping = new Map();
-    const lightnessMapping = new Map();
-    
-    // Process each cluster
-    for (let i = 0; i < centroids.length; i++) {
-      const clusterHue = centroids[i][0];
-      
-      // Find pixels in this cluster
-      const clusterPixels = mappablePixels.filter((_, index) => 
-        clusters[index] === i
-      );
-      
-      // Map cluster center hue to closest hue in palette
-      const { color: mappedColor, index: mappedIndex } = 
-        colorUtils.findClosestHueColor(clusterHue, huePalette);
-      
-      // Calculate average saturation and lightness of cluster
-      const avgSaturation = clusterPixels.reduce((sum, pixel) => 
-        sum + pixel.hsl[1], 0) / clusterPixels.length;
-      
-      const avgLightness = clusterPixels.reduce((sum, pixel) => 
-        sum + pixel.hsl[2], 0) / clusterPixels.length;
-      
-      // Get mapped color's saturation and lightness
-      // Convert hex color string to HSL directly
-      const mappedHsl = chroma(mappedColor).hsl();
-      const mappedSaturation = mappedHsl[1];
-      const mappedLightness = mappedHsl[2];
-      
-      // Calculate scale factors
-      const saturationScale = mappedSaturation > 0 ? avgSaturation / mappedSaturation : 1;
-      const lightnessScale = mappedLightness > 0 ? avgLightness / mappedLightness : 1;
-      
-      // Store mappings
-      hueMapping.set(clusterHue, mappedColor);
-      saturationMapping.set(clusterHue, saturationScale);
-      lightnessMapping.set(clusterHue, lightnessScale);
-    }
-    
-    return {
-      hueMapping,
-      saturationMapping,
-      lightnessMapping
-    };
-  };
-  
-  /**
-   * Adjust colors based on hue clustering
-   * @param {Array} hslArray - Array of HSL pixel values
-   * @param {Object} mappings - Mappings from clusterHues
-   * @returns {Array} - Color-adjusted HSL pixel array
-   */
-  const adjustColors = (hslArray, mappings) => {
-    const { hueMapping, saturationMapping, lightnessMapping } = mappings;
-    
-    // If no mappings, return original array
-    if (hueMapping.size === 0) {
-      return hslArray;
-    }
-    
-    return hslArray.map(pixel => {
-      const [h, s, l] = pixel.hsl;
-      
-      // Find two closest cluster centers
-      const clusterHues = Array.from(hueMapping.keys());
-      if (clusterHues.length === 0) {
-        return pixel;
-      }
-      
-      // Calculate distances to all cluster centers
-      const distances = clusterHues.map(clusterHue => {
-        let distance = Math.abs(h - clusterHue);
-        if (distance > 180) {
-          distance = 360 - distance;
-        }
-        return { clusterHue, distance };
-      });
-      
-      // Sort by distance
-      distances.sort((a, b) => a.distance - b.distance);
-      
-      // Get closest cluster
-      const closestCluster = distances[0].clusterHue;
-      
-      // Get mapped values
-      const mappedColor = hueMapping.get(closestCluster);
-      const saturationScale = saturationMapping.get(closestCluster) || 1;
-      const lightnessScale = lightnessMapping.get(closestCluster) || 1;
-      
-      // Get mapped hue
-      // Convert hex color string to HSL directly
-      const mappedHsl = chroma(mappedColor).hsl();
-      const mappedHue = mappedHsl[0];
-      
-      // Apply adjustments
-      const adjustedHue = mappedHue;
-      const adjustedSaturation = Math.min(1, s * saturationScale);
-      const adjustedLightness = Math.min(1, l * lightnessScale);
-      
-      return {
-        ...pixel,
-        hsl: [adjustedHue, adjustedSaturation, adjustedLightness]
-      };
-    });
-  };
-  
-  /**
-   * Blend luminance-mapped and color-adjusted images
-   * @param {Array} luminanceArray - Luminance-mapped HSL pixel array
-   * @param {Array} colorArray - Color-adjusted HSL pixel array
-   * @param {Array} huePalette - Array of hue palette colors
-   * @returns {Array} - Blended HSL pixel array
-   */
-  const blendImages = (luminanceArray, colorArray, huePalette) => {
-    return luminanceArray.map((lumPixel, index) => {
-      const colorPixel = colorArray[index];
-      
-      // Calculate blend factor
-      const factor = colorUtils.blendFactor(colorPixel.hsl, huePalette);
-      
-      // Linear interpolation between luminance and color pixels
-      const blendedHsl = [
-        colorPixel.hsl[0], // Use hue from color-adjusted pixel
-        lumPixel.hsl[1] * (1 - factor) + colorPixel.hsl[1] * factor, // Blend saturation
-        lumPixel.hsl[2] * (1 - factor) + colorPixel.hsl[2] * factor  // Blend lightness
-      ];
-      
-      return {
-        ...lumPixel,
-        hsl: blendedHsl
-      };
-    });
-  };
-  
-  /**
-   * Process the image with the current settings
+   * Process the image with the current settings using a Web Worker
    * @returns {Promise} - Promise that resolves when processing is complete
    */
-  const processImage = async () => {
-    if (!originalImage.value) {
-      error.value = 'No image loaded';
-      return;
-    }
-    
-    try {
-      error.value = null;
-      isProcessing.value = true;
-      progress.value = 0;
+  const processImage = () => {
+    return new Promise((resolve, reject) => {
+      if (!originalImage.value) {
+        error.value = 'No image loaded';
+        reject(new Error('No image loaded'));
+        return;
+      }
       
-      const { canvas, width, height } = originalImage.value;
-      
-      // Step 1: Image Preparation
-      progress.value = 10;
-      const pixelData = getPixelData(canvas);
-      const hslArray = pixelDataToHslArray(pixelData);
-      
-      // Step 2: Luminance Range Adjustment
-      progress.value = 20;
-      const luminanceAdjustedArray = adjustLuminanceRange(
-        hslArray,
-        selectedPalette.luminance
-      );
-      
-      // Create luminance-adjusted image
-      luminanceAdjustedImage.value = {
-        canvas: hslArrayToCanvas(luminanceAdjustedArray, width, height),
-        width,
-        height
-      };
-      
-      // Step 3: Luminance Mapping
-      progress.value = 40;
-      const luminanceMappedArray = mapLuminance(
-        luminanceAdjustedArray,
-        selectedPalette.luminance
-      );
-      
-      // Create luminance-mapped image
-      luminanceMappedImage.value = {
-        canvas: hslArrayToCanvas(luminanceMappedArray, width, height),
-        width,
-        height
-      };
-      
-      // Step 4: Hue Clustering
-      progress.value = 60;
-      const mappings = clusterHues(
-        luminanceAdjustedArray,
-        selectedPalette.hue,
-        settings.colorCount
-      );
-      
-      // Step 5: Color Adjustment
-      progress.value = 70;
-      const colorAdjustedArray = adjustColors(
-        luminanceAdjustedArray,
-        mappings
-      );
-      
-      // Create color-adjusted image
-      colorAdjustedImage.value = {
-        canvas: hslArrayToCanvas(colorAdjustedArray, width, height),
-        width,
-        height
-      };
-      
-      // Step 6: Blending
-      progress.value = 80;
-      const blendedArray = blendImages(
-        luminanceMappedArray,
-        colorAdjustedArray,
-        selectedPalette.hue
-      );
-      
-      // Step 7: Output Generation
-      progress.value = 90;
-      processedImage.value = {
-        canvas: hslArrayToCanvas(blendedArray, width, height),
-        width,
-        height
-      };
-      
-      progress.value = 100;
-      isProcessing.value = false;
-      
-      return processedImage.value;
-    } catch (err) {
-      error.value = `Processing failed: ${err.message}`;
-      isProcessing.value = false;
-      throw err;
-    }
+      try {
+        error.value = null;
+        isProcessing.value = true;
+        progress.value = 0;
+        
+        const { canvas, width, height } = originalImage.value;
+        const pixelData = getPixelData(canvas);
+        
+        // Get or create worker
+        const workerInstance = getWorker();
+        
+        // Set up message handler
+        workerInstance.onmessage = (e) => {
+          const { progress: workerProgress, status, error: workerError, ...imageData } = e.data;
+          
+          if (workerError) {
+            error.value = `Worker error: ${workerError}`;
+            isProcessing.value = false;
+            reject(new Error(workerError));
+            return;
+          }
+          
+          // Update progress
+          progress.value = workerProgress;
+          
+          // Handle intermediate results
+          if (imageData.luminanceAdjustedImageData) {
+            luminanceAdjustedImage.value = {
+              canvas: createCanvasFromImageData(imageData.luminanceAdjustedImageData),
+              width,
+              height
+            };
+          }
+          
+          if (imageData.luminanceMappedImageData) {
+            luminanceMappedImage.value = {
+              canvas: createCanvasFromImageData(imageData.luminanceMappedImageData),
+              width,
+              height
+            };
+          }
+          
+          if (imageData.colorAdjustedImageData) {
+            colorAdjustedImage.value = {
+              canvas: createCanvasFromImageData(imageData.colorAdjustedImageData),
+              width,
+              height
+            };
+          }
+          
+          // Handle final result
+          if (imageData.processedImageData && workerProgress === 100) {
+            processedImage.value = {
+              canvas: createCanvasFromImageData(imageData.processedImageData),
+              width,
+              height
+            };
+            
+            isProcessing.value = false;
+            resolve(processedImage.value);
+          }
+        };
+        
+        // Handle worker errors
+        workerInstance.onerror = (err) => {
+          error.value = `Worker error: ${err.message}`;
+          isProcessing.value = false;
+          reject(err);
+        };
+        
+        // Send data to worker
+        // Note: We need to ensure all data is cloneable
+        // Convert ImageData to a plain array to avoid cloning issues
+        const pixelDataArray = Array.from(pixelData.data);
+        
+        // Create deep copies of the palettes to ensure they're cloneable
+        // This removes any reactive wrappers that Vue might have added
+        const luminancePaletteClone = JSON.parse(JSON.stringify(selectedPalette.luminance));
+        const huePaletteClone = JSON.parse(JSON.stringify(selectedPalette.hue));
+        
+        // Create a plain object with the settings
+        const settingsClone = {
+          colorCount: settings.colorCount,
+          grayscaleThreshold: settings.grayscaleThreshold,
+          hueDistanceThreshold: settings.hueDistanceThreshold,
+          slDistanceThreshold: settings.slDistanceThreshold,
+          outlierPercentage: settings.outlierPercentage
+        };
+        
+        workerInstance.postMessage({
+          type: 'processImage',
+          pixelData: pixelDataArray,
+          width,
+          height,
+          luminancePalette: luminancePaletteClone,
+          huePalette: huePaletteClone,
+          settings: settingsClone
+        });
+        
+      } catch (err) {
+        error.value = `Processing failed: ${err.message}`;
+        isProcessing.value = false;
+        reject(err);
+      }
+    });
   };
   
   /**
@@ -678,9 +506,6 @@ export function useImageProcessing() {
     setPalette,
     setCustomPalette,
     
-    // Expose internal functions for testing
-    clusterHues,
-    adjustLuminanceRange,
-    adjustColors
+    // Note: Internal processing functions are now in the worker
   };
 }

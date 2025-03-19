@@ -298,6 +298,11 @@ function clusterHues(hslArray, huePalette, colorCount) {
       clusters[index] === i
     );
     
+    // Find the lowest and highest hue values in this cluster
+    const clusterHues = clusterPixels.map(pixel => pixel.hsl[0]);
+    const minHue = Math.min(...clusterHues);
+    const maxHue = Math.max(...clusterHues);
+    
     // Map cluster center hue to closest hue in palette
     const { color: mappedColor, index: mappedIndex } = 
       colorUtils.findClosestHueColor(clusterHue, huePalette);
@@ -319,7 +324,8 @@ function clusterHues(hslArray, huePalette, colorCount) {
     const lightnessScale = mappedLightness > 0 ? avgLightness / mappedLightness : 1;
     
     // Store mappings as key-value pairs in arrays
-    hueMapping.push([clusterHue, mappedColor]);
+    // Include the min and max hue values along with the centroid and mapped color
+    hueMapping.push([clusterHue, mappedColor, minHue, maxHue]);
     saturationMapping.push([clusterHue, saturationScale]);
     lightnessMapping.push([clusterHue, lightnessScale]);
   }
@@ -345,33 +351,71 @@ function adjustColors(hslArray, mappings) {
   return hslArray.map(pixel => {
     const [h, s, l] = pixel.hsl;
     
-    // Extract cluster hues from the mapping arrays
-    const clusterHues = hueMapping.map(pair => pair[0]);
-    if (clusterHues.length === 0) {
+    if (hueMapping.length === 0) {
       return pixel;
     }
     
-    // Calculate distances to all cluster centers
-    const distances = clusterHues.map(clusterHue => {
-      let distance = Math.abs(h - clusterHue);
-      if (distance > 180) {
-        distance = 360 - distance;
+    // Find the cluster where the pixel's hue is between min and max hue
+    let mappedColorPair = null;
+    let saturationScalePair = null;
+    let lightnessScalePair = null;
+    let clusterHue = null;
+    
+    // Check if the pixel's hue falls within any cluster's min-max range
+    for (let i = 0; i < hueMapping.length; i++) {
+      const pair = hueMapping[i];
+      const minHue = pair[2];
+      const maxHue = pair[3];
+      
+      // Handle the circular nature of hue (0-360)
+      let isInRange = false;
+      
+      if (maxHue >= minHue) {
+        // Normal case: min to max
+        isInRange = h >= minHue && h <= maxHue;
+      } else {
+        // Wrapping case: e.g., min=350, max=10
+        isInRange = h >= minHue || h <= maxHue;
       }
-      return { clusterHue, distance };
-    });
+      
+      if (isInRange) {
+        mappedColorPair = pair;
+        clusterHue = pair[0];
+        saturationScalePair = saturationMapping.find(p => p[0] === clusterHue);
+        lightnessScalePair = lightnessMapping.find(p => p[0] === clusterHue);
+        break;
+      }
+    }
     
-    // Sort by distance
-    distances.sort((a, b) => a.distance - b.distance);
-    
-    // Get closest cluster
-    const closestCluster = distances[0].clusterHue;
-    
-    // Find the mapped values in the arrays
-    const mappedColorPair = hueMapping.find(pair => pair[0] === closestCluster);
-    const saturationScalePair = saturationMapping.find(pair => pair[0] === closestCluster);
-    const lightnessScalePair = lightnessMapping.find(pair => pair[0] === closestCluster);
+    // If no cluster contains the hue, fall back to finding the closest centroid
+    if (!mappedColorPair) {
+      // Extract cluster hues from the mapping arrays
+      const clusterHues = hueMapping.map(pair => pair[0]);
+      
+      // Calculate distances to all cluster centers
+      const distances = clusterHues.map(clusterHue => {
+        let distance = Math.abs(h - clusterHue);
+        if (distance > 180) {
+          distance = 360 - distance;
+        }
+        return { clusterHue, distance };
+      });
+      
+      // Sort by distance
+      distances.sort((a, b) => a.distance - b.distance);
+      
+      // Get closest cluster
+      clusterHue = distances[0].clusterHue;
+      
+      // Find the mapped values in the arrays
+      mappedColorPair = hueMapping.find(pair => pair[0] === clusterHue);
+      saturationScalePair = saturationMapping.find(pair => pair[0] === clusterHue);
+      lightnessScalePair = lightnessMapping.find(pair => pair[0] === clusterHue);
+    }
     
     const mappedColor = mappedColorPair ? mappedColorPair[1] : null;
+    const minHue = mappedColorPair ? mappedColorPair[2] : null;
+    const maxHue = mappedColorPair ? mappedColorPair[3] : null;
     const saturationScale = saturationScalePair ? saturationScalePair[1] : 1;
     const lightnessScale = lightnessScalePair ? lightnessScalePair[1] : 1;
     
@@ -383,8 +427,9 @@ function adjustColors(hslArray, mappings) {
     const mappedHsl = chroma(mappedColor).hsl();
     const mappedHue = mappedHsl[0];
     
-    // Apply adjustments
-    const adjustedHue = mappedHue;
+    // Use the mapped hue as the base value
+    let adjustedHue = mappedHue;
+    
     const adjustedSaturation = Math.min(1, s * saturationScale);
     const adjustedLightness = Math.min(1, l * lightnessScale);
     

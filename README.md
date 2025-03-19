@@ -143,11 +143,13 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
   - Filter pixels where isHueMappable returns true
   - Run K-means clustering on hue values of filtered pixels
   - For each cluster:
+    - Store the cluster centroid (average hue)
+    - Find and store the minimum and maximum hue values in the cluster
     - Map cluster center hue to closest hue in palette
     - Calculate average saturation and lightness of cluster
     - Calculate saturation and lightness scale factors relative to mapped palette color
 - **Output**:
-  - Hue mapping: Map from cluster centers to palette hues
+  - Hue mapping: Map from cluster centers to palette hues, including min/max hue values for each cluster
   - Saturation mapping: Map from cluster centers to saturation scale factors
   - Lightness mapping: Map from cluster centers to lightness scale factors
 
@@ -156,9 +158,9 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Input**: Luminance-adjusted HSL image, hue/saturation/lightness mappings
 - **Process**:
   - For each pixel:
-    - Find two closest cluster centers
-    - Calculate weighted average of mapped hues based on distance to cluster centers
-    - Apply weighted average of saturation and lightness scale factors
+    - Find the cluster where the pixel's hue falls within the cluster's min-max hue range
+    - If no such cluster exists, fall back to finding the closest cluster centroid
+    - Apply the mapped hue, saturation, and lightness from the selected cluster
 - **Output**: Color-adjusted HSL image
 
 #### 6. Blending

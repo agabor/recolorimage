@@ -32,6 +32,7 @@ self.onmessage = function(e) {
         self.postMessage({ error: `Unknown command: ${type}` });
     }
   } catch (err) {
+    console.error('Error processing image:', err);
     self.postMessage({ error: err.message });
   }
 };
@@ -45,59 +46,31 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   huePalette = huePalette.map(hex => chroma(hex));
   
   // Step 1: Convert to HSL array
-  self.postMessage({ progress: 10, status: 'Converting to HSL' });
+  self.postMessage({ status: 'Processing image...' });
   const hslArray = pixelDataToHslArray(pixelData, width, height);
   
   // Step 2: Luminance Range Adjustment
-  self.postMessage({ progress: 20, status: 'Adjusting luminance range' });
   const luminanceAdjustedArray = adjustLuminanceRange(
     hslArray,
     luminancePalette,
     settings.outlierPercentage
   );
   
-  // Update progress
-  self.postMessage({ 
-    progress: 30, 
-    status: 'Luminance adjusted'
-  });
-  
   // Step 3: Luminance Mapping
-  self.postMessage({ progress: 40, status: 'Mapping luminance' });
   const luminanceMappedArray = mapLuminance(
     luminanceAdjustedArray,
     luminancePalette
   );
   
-  // Update progress
-  self.postMessage({ 
-    progress: 50, 
-    status: 'Luminance mapped'
-  });
-  
   // Step 4: Hue Clustering
-  self.postMessage({ progress: 60, status: 'Clustering hues' });
   const mappings = clusterHues(
     luminanceAdjustedArray,
     huePalette,
     settings.colorCount
   );
   
-  // Step 5: Hue Classification
-  self.postMessage({ progress: 65, status: 'Classifying hues' });
-  const hueClassificationArray = createHueClassificationImage(
-    luminanceAdjustedArray,
-    mappings
-  );
-  
-  // Update progress
-  self.postMessage({ 
-    progress: 70, 
-    status: 'Hues classified'
-  });
   
   // Step 5: Hue and Saturation Application
-  self.postMessage({ progress: 85, status: 'Applying hue and saturation' });
   const finalArray = applyHueAndSaturation(
     luminanceAdjustedArray,
     luminanceMappedArray,
@@ -107,7 +80,6 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   // Step 6: Output Generation
   const processedImageData = hslArrayToImageData(finalArray, width, height);
   self.postMessage({ 
-    progress: 100, 
     status: 'Processing complete',
     processedImageData: {
       data: Array.from(processedImageData.data),

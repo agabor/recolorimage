@@ -55,7 +55,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 
 ### 5. UI Features
 - Responsive design for desktop and mobile
-- Progress indicator for processing all images
+- Simple processing indicator
 
 ## Color Processing Algorithm
 

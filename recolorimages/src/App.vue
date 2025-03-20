@@ -9,7 +9,6 @@ import { useImageProcessing } from './composables/useImageProcessing';
 // Initialize the image processing composable
 const {
   isProcessing,
-  progress,
   error,
   hasImage,
   hasProcessedImage,
@@ -115,7 +114,6 @@ watch(error, (newError) => {
             :is-processing="isProcessing"
             :has-image="hasImage"
             :settings="settings"
-            :progress="progress"
             @process="handleProcess"
             @update:settings="newSettings => Object.assign(settings, newSettings)"
           />

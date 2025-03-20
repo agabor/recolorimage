@@ -16,7 +16,6 @@ export function useImageProcessing() {
   const originalImage = ref(null);
   const processedImage = ref(null);
   const isProcessing = ref(false);
-  const progress = ref(0);
   const error = ref(null);
   
   // Settings
@@ -157,7 +156,6 @@ export function useImageProcessing() {
     try {
       error.value = null;
       isProcessing.value = true;
-      progress.value = 10;
       
       const img = await createImageFromFile(file);
       const canvas = createCanvasFromImage(img);
@@ -169,7 +167,6 @@ export function useImageProcessing() {
         height: img.height
       };
       
-      progress.value = 100;
       isProcessing.value = false;
       return originalImage.value;
     } catch (err) {
@@ -241,7 +238,6 @@ export function useImageProcessing() {
       try {
         error.value = null;
         isProcessing.value = true;
-        progress.value = 0;
         
         const { canvas, width, height } = originalImage.value;
         const pixelData = getPixelData(canvas);
@@ -251,7 +247,7 @@ export function useImageProcessing() {
         
         // Set up message handler
         workerInstance.onmessage = (e) => {
-          const { progress: workerProgress, status, error: workerError, ...imageData } = e.data;
+          const { status, error: workerError, ...imageData } = e.data;
           
           if (workerError) {
             error.value = `Worker error: ${workerError}`;
@@ -260,11 +256,8 @@ export function useImageProcessing() {
             return;
           }
           
-          // Update progress
-          progress.value = workerProgress;
-          
           // Handle final result
-          if (imageData.processedImageData && workerProgress === 100) {
+          if (imageData.processedImageData) {
             processedImage.value = {
               canvas: createCanvasFromImageData(imageData.processedImageData),
               width,
@@ -424,7 +417,6 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     originalImage,
     processedImage,
     isProcessing,
-    progress,
     error,
     settings,
     selectedPalette,

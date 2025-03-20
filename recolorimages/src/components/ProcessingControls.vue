@@ -13,10 +13,6 @@ const props = defineProps({
   settings: {
     type: Object,
     required: true
-  },
-  progress: {
-    type: Number,
-    default: 0
   }
 });
 
@@ -61,13 +57,14 @@ const handleProcess = () => {
         @click="handleProcess"
         :disabled="isProcessing || !hasImage"
       >
-        <span v-if="isProcessing">Processing... {{ Math.round(progress) }}%</span>
+        <span v-if="isProcessing">Processing...</span>
         <span v-else>Recolor Image</span>
       </button>
     </div>
     
-    <div v-if="isProcessing" class="progress-bar-container">
-      <div class="progress-bar" :style="{ width: `${progress}%` }"></div>
+    <div v-if="isProcessing" class="processing-indicator">
+      <div class="spinner"></div>
+      <span>Processing image...</span>
     </div>
   </div>
 </template>
@@ -143,18 +140,26 @@ const handleProcess = () => {
   cursor: not-allowed;
 }
 
-.progress-bar-container {
-  height: 8px;
-  background-color: #ddd;
-  border-radius: 4px;
+.processing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 1rem;
-  overflow: hidden;
+  color: #4CAF50;
+  font-weight: bold;
 }
 
-.progress-bar {
-  height: 100%;
-  background-color: #4CAF50;
-  transition: width 0.3s ease;
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(76, 175, 80, 0.3);
+  border-radius: 50%;
+  border-top-color: #4CAF50;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 @media (min-width: 768px) {

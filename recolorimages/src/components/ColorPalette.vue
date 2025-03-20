@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { DEFAULT_PALETTES } from '../utils/colorUtils';
+import chroma from 'chroma-js';
 
 const props = defineProps({
   selectedPalette: {
@@ -9,7 +10,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:palette', 'custom-palette']);
+const emit = defineEmits(['update:palette', 'custom-palette', 'toggle-hue']);
 
 const palettes = ref(Object.keys(DEFAULT_PALETTES));
 const selectedPaletteName = ref(props.selectedPalette.name);
@@ -86,6 +87,16 @@ const cancelCustomization = () => {
   isCustomizing.value = false;
   selectedPaletteName.value = props.selectedPalette.name;
 };
+
+// Toggle hue color enabled/disabled state
+const toggleHueColor = (index) => {
+  emit('toggle-hue', index);
+};
+
+// Check if a hue color is disabled
+const isHueDisabled = (index) => {
+  return props.selectedPalette.disabledHues && props.selectedPalette.disabledHues.includes(index);
+};
 </script>
 
 <template>
@@ -107,13 +118,15 @@ const cancelCustomization = () => {
       </div>
       
       <div class="palette-section">
-        <h3>Hue Palette</h3>
+        <h3>Hue Palette <small>(click to enable/disable)</small></h3>
         <div class="hue-swatches">
           <div 
             v-for="(color, index) in selectedPalette.hue" 
             :key="index"
             class="color-swatch"
+            :class="{ 'disabled': isHueDisabled(index) }"
             :style="{ backgroundColor: color.hex() }"
+            @click="toggleHueColor(index)"
           ></div>
         </div>
       </div>
@@ -233,6 +246,12 @@ const cancelCustomization = () => {
   color: #333;
 }
 
+.palette-section small {
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: #666;
+}
+
 .luminance-gradient {
   height: 40px;
   border-radius: 4px;
@@ -250,6 +269,35 @@ const cancelCustomization = () => {
   height: 40px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.color-swatch:hover {
+  transform: scale(1.05);
+}
+
+.color-swatch.disabled {
+  opacity: 0.3;
+  position: relative;
+}
+
+.color-swatch.disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.1) 5px,
+    rgba(0, 0, 0, 0.2) 5px,
+    rgba(0, 0, 0, 0.2) 10px
+  );
+  border-radius: 4px;
 }
 
 .custom-palette-editor {

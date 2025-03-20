@@ -27,13 +27,14 @@ export function useImageProcessing() {
     outlierPercentage: 5
   });
   
-  // Selected palettes
-  const selectedPalette = reactive({
-    name: 'nord',
-    luminance: colorUtils.DEFAULT_PALETTES.nord.luminance,
-    hue: colorUtils.DEFAULT_PALETTES.nord.hue,
-    custom: false
-  });
+// Selected palettes
+const selectedPalette = reactive({
+  name: 'nord',
+  luminance: colorUtils.DEFAULT_PALETTES.nord.luminance,
+  hue: colorUtils.DEFAULT_PALETTES.nord.hue,
+  disabledHues: [],
+  custom: false
+});
   
   /**
    * Create an image element from a file
@@ -283,7 +284,12 @@ export function useImageProcessing() {
         
         // Convert chroma.Color objects to hex strings for cloning
         const luminancePaletteClone = selectedPalette.luminance.map(color => color.hex());
-        const huePaletteClone = selectedPalette.hue.map(color => color.hex());
+        
+        // Filter out disabled hue colors
+        const enabledHues = selectedPalette.hue.filter((_, index) => 
+          !selectedPalette.disabledHues.includes(index)
+        );
+        const huePaletteClone = enabledHues.map(color => color.hex());
         
         // Create a plain object with the settings
         const settingsClone = {
@@ -364,18 +370,19 @@ export function useImageProcessing() {
     }
   };
   
-  /**
-   * Set the active palette
-   * @param {string} paletteName - Name of the palette to use
-   */
-  const setPalette = (paletteName) => {
-    if (colorUtils.DEFAULT_PALETTES[paletteName]) {
-      selectedPalette.name = paletteName;
-      selectedPalette.luminance = colorUtils.DEFAULT_PALETTES[paletteName].luminance;
-      selectedPalette.hue = colorUtils.DEFAULT_PALETTES[paletteName].hue;
-      selectedPalette.custom = false;
-    }
-  };
+/**
+ * Set the active palette
+ * @param {string} paletteName - Name of the palette to use
+ */
+const setPalette = (paletteName) => {
+  if (colorUtils.DEFAULT_PALETTES[paletteName]) {
+    selectedPalette.name = paletteName;
+    selectedPalette.luminance = colorUtils.DEFAULT_PALETTES[paletteName].luminance;
+    selectedPalette.hue = colorUtils.DEFAULT_PALETTES[paletteName].hue;
+    selectedPalette.disabledHues = [];
+    selectedPalette.custom = false;
+  }
+};
   
 /**
  * Set a custom palette
@@ -394,7 +401,29 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     typeof color === 'string' ? chroma(color) : color
   );
   
+  selectedPalette.disabledHues = [];
   selectedPalette.custom = true;
+};
+
+/**
+ * Toggle a hue color's enabled/disabled state
+ * @param {number} index - Index of the hue color to toggle
+ */
+const toggleHueColor = (index) => {
+  const disabledIndex = selectedPalette.disabledHues.indexOf(index);
+  
+  // If all colors except one would be disabled, don't allow disabling the last one
+  if (disabledIndex === -1 && selectedPalette.disabledHues.length >= selectedPalette.hue.length - 1) {
+    return;
+  }
+  
+  if (disabledIndex === -1) {
+    // Add to disabled list
+    selectedPalette.disabledHues.push(index);
+  } else {
+    // Remove from disabled list
+    selectedPalette.disabledHues.splice(disabledIndex, 1);
+  }
 };
   
   // Computed properties
@@ -434,6 +463,7 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     downloadProcessedImage,
     setPalette,
     setCustomPalette,
+    toggleHueColor,
     
     // Note: Internal processing functions are now in the worker
   };

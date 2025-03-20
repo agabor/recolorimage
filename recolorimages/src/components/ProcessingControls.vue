@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps({
   isProcessing: {
@@ -13,6 +13,10 @@ const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  selectedPalette: {
+    type: Object,
+    required: true
   }
 });
 
@@ -24,6 +28,18 @@ const colorCount = ref(props.settings.colorCount);
 // Watch for changes in settings from parent
 watch(() => props.settings, (newSettings) => {
   colorCount.value = newSettings.colorCount;
+}, { deep: true });
+
+// Watch for changes in the palette or disabled hues
+watch(() => props.selectedPalette, (newPalette) => {
+  // Calculate the maximum allowed color count
+  const maxAllowedColors = newPalette.hue.length - (newPalette.disabledHues ? newPalette.disabledHues.length : 0);
+  
+  // If current color count exceeds the maximum, adjust it
+  if (colorCount.value > maxAllowedColors) {
+    colorCount.value = maxAllowedColors;
+    emit('update:settings', { ...props.settings, colorCount: maxAllowedColors });
+  }
 }, { deep: true });
 
 // Update settings when local values change
@@ -46,7 +62,7 @@ const handleProcess = () => {
           type="range" 
           v-model.number="colorCount" 
           min="2" 
-          max="16" 
+          :max="selectedPalette.hue.length - (selectedPalette.disabledHues ? selectedPalette.disabledHues.length : 0)" 
           step="1"
           :disabled="isProcessing || !hasImage"
         />

@@ -21,7 +21,8 @@ const {
   getProcessedImageUrl,
   downloadProcessedImage,
   setPalette,
-  setCustomPalette
+  setCustomPalette,
+  toggleHueColor
 } = useImageProcessing();
 
 // Image URLs for display
@@ -105,6 +106,7 @@ watch(error, (newError) => {
             :selected-palette="selectedPalette"
             @update:palette="handlePaletteUpdate"
             @custom-palette="handleCustomPalette"
+            @toggle-hue="toggleHueColor"
           />
         </section>
         
@@ -114,6 +116,7 @@ watch(error, (newError) => {
             :is-processing="isProcessing"
             :has-image="hasImage"
             :settings="settings"
+            :selected-palette="selectedPalette"
             @process="handleProcess"
             @update:settings="newSettings => Object.assign(settings, newSettings)"
           />

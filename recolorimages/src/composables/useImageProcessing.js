@@ -17,6 +17,7 @@ export function useImageProcessing() {
   const processedImage = ref(null);
   const isProcessing = ref(false);
   const error = ref(null);
+  const matchedPaletteIndices = ref([]);
   
   // Settings
   const settings = reactive({
@@ -265,6 +266,16 @@ const selectedPalette = reactive({
               height
             };
             
+            // Store the matched palette indices, mapping from worker indices to original indices
+            if (imageData.matchedPaletteIndices && imageData.matchedPaletteIndices.length > 0) {
+              // Map worker indices to original palette indices
+              matchedPaletteIndices.value = imageData.matchedPaletteIndices.map(
+                workerIndex => workerToOriginalIndices[workerIndex]
+              );
+            } else {
+              matchedPaletteIndices.value = [];
+            }
+            
             isProcessing.value = false;
             resolve(processedImage.value);
           }
@@ -285,11 +296,15 @@ const selectedPalette = reactive({
         // Convert chroma.Color objects to hex strings for cloning
         const luminancePaletteClone = selectedPalette.luminance.map(color => color.hex());
         
-        // Filter out disabled hue colors
-        const enabledHues = selectedPalette.hue.filter((_, index) => 
-          !selectedPalette.disabledHues.includes(index)
-        );
-        const huePaletteClone = enabledHues.map(color => color.hex());
+        // Filter out disabled hue colors and keep track of original indices
+        const enabledHuesWithIndices = selectedPalette.hue
+          .map((color, index) => ({ color, originalIndex: index }))
+          .filter(item => !selectedPalette.disabledHues.includes(item.originalIndex));
+        
+        // Create a map from worker indices to original palette indices
+        const workerToOriginalIndices = enabledHuesWithIndices.map(item => item.originalIndex);
+        
+        const huePaletteClone = enabledHuesWithIndices.map(item => item.color.hex());
         
         // Create a plain object with the settings
         const settingsClone = {
@@ -449,6 +464,7 @@ const toggleHueColor = (index) => {
     error,
     settings,
     selectedPalette,
+    matchedPaletteIndices,
     
     // Computed
     hasImage,

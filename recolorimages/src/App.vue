@@ -15,6 +15,7 @@ const {
   imageInfo,
   settings,
   selectedPalette,
+  matchedPaletteIndices,
   loadImage,
   processImage,
   getOriginalImageUrl,
@@ -104,6 +105,7 @@ watch(error, (newError) => {
           <h2>2. Select Color Palette</h2>
           <ColorPalette 
             :selected-palette="selectedPalette"
+            :matched-palette-indices="matchedPaletteIndices"
             @update:palette="handlePaletteUpdate"
             @custom-palette="handleCustomPalette"
             @toggle-hue="toggleHueColor"

@@ -78,13 +78,30 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   
   // Step 6: Output Generation
   const processedImageData = hslArrayToImageData(finalArray, width, height);
+  
+  // Extract the palette indices that were matched
+  const matchedPaletteIndices = [];
+  if (mappings.length > 0) {
+    // For each mapping, find the index of the mapped color in the huePalette
+    mappings.forEach(mapping => {
+      const mappedColorHex = mapping[1];
+      const paletteIndex = huePalette.findIndex(color => 
+        chroma(color).hex() === chroma(mappedColorHex).hex()
+      );
+      if (paletteIndex !== -1 && !matchedPaletteIndices.includes(paletteIndex)) {
+        matchedPaletteIndices.push(paletteIndex);
+      }
+    });
+  }
+  
   self.postMessage({ 
     status: 'Processing complete',
     processedImageData: {
       data: Array.from(processedImageData.data),
       width: processedImageData.width,
       height: processedImageData.height
-    }
+    },
+    matchedPaletteIndices
   });
 }
 

@@ -7,6 +7,10 @@ const props = defineProps({
   selectedPalette: {
     type: Object,
     required: true
+  },
+  matchedPaletteIndices: {
+    type: Array,
+    default: () => []
   }
 });
 
@@ -119,12 +123,18 @@ const isHueDisabled = (index) => {
       
       <div class="palette-section">
         <h3>Hue Palette <small>(click to enable/disable)</small></h3>
+        <p v-if="matchedPaletteIndices.length > 0" class="matched-info">
+          Colors with ✓ were matched in the latest recoloring (disabled colors are not used)
+        </p>
         <div class="hue-swatches">
           <div 
             v-for="(color, index) in selectedPalette.hue" 
             :key="index"
             class="color-swatch"
-            :class="{ 'disabled': isHueDisabled(index) }"
+            :class="{ 
+              'disabled': isHueDisabled(index),
+              'matched': !isHueDisabled(index) && matchedPaletteIndices.includes(index)
+            }"
             :style="{ backgroundColor: color.hex() }"
             @click="toggleHueColor(index)"
           ></div>
@@ -298,6 +308,32 @@ const isHueDisabled = (index) => {
     rgba(0, 0, 0, 0.2) 10px
   );
   border-radius: 4px;
+}
+
+.color-swatch.matched {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7), 0 0 0 6px rgba(76, 175, 80, 0.7);
+  z-index: 1;
+}
+
+.color-swatch.matched::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+.matched-info {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: -0.3rem;
+  margin-bottom: 0.5rem;
+  font-style: italic;
 }
 
 .custom-palette-editor {

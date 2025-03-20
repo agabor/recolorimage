@@ -157,10 +157,18 @@ function adjustLuminanceRange(hslArray, luminancePalette, outlierPercentage) {
       return 0;
     }
   });
-  const paletteRange = {
-    min: Math.min(...paletteLightness),
-    max: Math.max(...paletteLightness)
-  };
+  let paletteRange = {
+    min: 1000,
+    max: -1000
+  }
+  for (let l of paletteLightness) {
+    if (l < paletteRange.min) {
+      paletteRange.min = l;
+    }
+    if (l > paletteRange.max) {
+      paletteRange.max = l;
+    }
+  }
   
   // Calculate input range width
   const inputRangeWidth = inputRange.max - inputRange.min;
@@ -247,8 +255,16 @@ function clusterHues(hslArray, huePalette, colorCount) {
     
     // Find the lowest and highest hue values in this cluster
     const clusterHues = clusterPixels.map(pixel => pixel.hsl[0]);
-    const minHue = Math.min(...clusterHues);
-    const maxHue = Math.max(...clusterHues);
+    let minHue = 1000;
+    let maxHue = -1000;
+    for (let hue of clusterHues) {
+      if (hue < minHue) {
+        minHue = hue;
+      }
+      if (hue > maxHue) {
+        maxHue = hue;
+      }
+    }
     
     // Map cluster center hue to closest hue in palette
     const { color: mappedColor, index: mappedIndex } = 

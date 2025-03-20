@@ -17,7 +17,7 @@ export function useImageProcessing() {
   const processedImage = ref(null);
   const isProcessing = ref(false);
   const error = ref(null);
-  const matchedPaletteIndices = ref([]);
+  const matchedPaletteStats = ref([]);
   
   // Settings
   const settings = reactive({
@@ -265,14 +265,15 @@ const selectedPalette = reactive({
               height
             };
             
-            // Store the matched palette indices, mapping from worker indices to original indices
-            if (imageData.matchedPaletteIndices && imageData.matchedPaletteIndices.length > 0) {
+            // Store the matched palette stats, mapping from worker indices to original indices
+            if (imageData.matchedPaletteStats && imageData.matchedPaletteStats.length > 0) {
               // Map worker indices to original palette indices
-              matchedPaletteIndices.value = imageData.matchedPaletteIndices.map(
-                workerIndex => workerToOriginalIndices[workerIndex]
-              );
+              matchedPaletteStats.value = imageData.matchedPaletteStats.map(stat => ({
+                index: workerToOriginalIndices[stat.index],
+                percentage: stat.percentage
+              }));
             } else {
-              matchedPaletteIndices.value = [];
+              matchedPaletteStats.value = [];
             }
             
             isProcessing.value = false;
@@ -462,7 +463,7 @@ const toggleHueColor = (index) => {
     error,
     settings,
     selectedPalette,
-    matchedPaletteIndices,
+    matchedPaletteStats,
     
     // Computed
     hasImage,

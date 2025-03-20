@@ -8,7 +8,7 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  matchedPaletteIndices: {
+  matchedPaletteStats: {
     type: Array,
     default: () => []
   }
@@ -101,6 +101,12 @@ const toggleHueColor = (index) => {
 const isHueDisabled = (index) => {
   return props.selectedPalette.disabledHues && props.selectedPalette.disabledHues.includes(index);
 };
+
+// Get the match percentage for a color
+const getMatchPercentage = (index) => {
+  const stat = props.matchedPaletteStats.find(stat => stat.index === index);
+  return stat ? stat.percentage : 0;
+};
 </script>
 
 <template>
@@ -123,8 +129,8 @@ const isHueDisabled = (index) => {
       
       <div class="palette-section">
         <h3>Hue Palette <small>(click to enable/disable)</small></h3>
-        <p v-if="matchedPaletteIndices.length > 0" class="matched-info">
-          Colors with ✓ were matched in the latest recoloring (disabled colors are not used)
+        <p v-if="matchedPaletteStats.length > 0" class="matched-info">
+          Percentages show how many mappable pixels were matched to each color (disabled colors are not used)
         </p>
         <div class="hue-swatches">
           <div 
@@ -133,9 +139,10 @@ const isHueDisabled = (index) => {
             class="color-swatch"
             :class="{ 
               'disabled': isHueDisabled(index),
-              'matched': !isHueDisabled(index) && matchedPaletteIndices.includes(index)
+              'matched': !isHueDisabled(index) && getMatchPercentage(index) > 0
             }"
             :style="{ backgroundColor: color.hex() }"
+            :data-percentage="getMatchPercentage(index)"
             @click="toggleHueColor(index)"
           ></div>
         </div>
@@ -317,13 +324,13 @@ const isHueDisabled = (index) => {
 }
 
 .color-swatch.matched::before {
-  content: '✓';
+  content: attr(data-percentage) '%';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   font-weight: bold;
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
 }

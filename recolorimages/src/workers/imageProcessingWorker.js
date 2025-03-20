@@ -62,11 +62,10 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   );
   
   // Step 4: Hue Clustering
-  const mappings = clusterHues(
+  const { mappings, paletteBuckets, selectedBucketIndices } = clusterHues(
     luminanceAdjustedArray,
     huePalette
   );
-  
   
   // Step 5: Hue and Saturation Application
   const finalArray = applyHueAndSaturation(
@@ -78,19 +77,35 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   // Step 6: Output Generation
   const processedImageData = hslArrayToImageData(finalArray, width, height);
   
-  // Extract the palette indices that were matched
-  const matchedPaletteIndices = [];
-  if (mappings.length > 0) {
-    // For each mapping, find the index of the mapped color in the huePalette
-    mappings.forEach(mapping => {
-      const mappedColorHex = mapping[1];
-      const paletteIndex = huePalette.findIndex(color => 
-        chroma(color).hex() === chroma(mappedColorHex).hex()
-      );
-      if (paletteIndex !== -1 && !matchedPaletteIndices.includes(paletteIndex)) {
-        matchedPaletteIndices.push(paletteIndex);
-      }
+  // Calculate the percentage of pixels matched for each palette color
+  const matchedPaletteStats = [];
+  const totalMappablePixels = hslArray.filter(pixel => 
+    colorUtils.isHueMappable(pixel.hsl, huePalette)
+  ).length;
+  
+  if (mappings.length > 0 && totalMappablePixels > 0) {
+    // Create an array to store the count of pixels for each palette index
+    const pixelCountByPaletteIndex = Array(huePalette.length).fill(0);
+    
+    // Count pixels for each palette index
+    selectedBucketIndices.forEach(bucketIndex => {
+      const pixelsInBucket = paletteBuckets[bucketIndex].length;
+      pixelCountByPaletteIndex[bucketIndex] = pixelsInBucket;
     });
+    
+    // Calculate percentages and create stats objects
+    for (let i = 0; i < huePalette.length; i++) {
+      const pixelCount = pixelCountByPaletteIndex[i];
+      const percentage = totalMappablePixels > 0 ? 
+        Math.round((pixelCount / totalMappablePixels) * 100) : 0;
+      
+      if (pixelCount > 0) {
+        matchedPaletteStats.push({
+          index: i,
+          percentage: percentage
+        });
+      }
+    }
   }
   
   self.postMessage({ 
@@ -100,7 +115,7 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
       width: processedImageData.width,
       height: processedImageData.height
     },
-    matchedPaletteIndices
+    matchedPaletteStats
   });
 }
 
@@ -245,7 +260,7 @@ function clusterHues(hslArray, huePalette) {
   
   // If no mappable pixels, return empty array
   if (mappablePixels.length === 0) {
-    return [];
+    return { mappings: [], paletteBuckets: [], selectedBucketIndices: [] };
   }
   
   // Create a bucket for each hue palette color
@@ -299,7 +314,7 @@ function clusterHues(hslArray, huePalette) {
     hueMapping.push([avgHue, mappedColor, minHue, maxHue]);
   }
   
-  return hueMapping;
+  return { mappings: hueMapping, paletteBuckets, selectedBucketIndices };
 }
 
 /**

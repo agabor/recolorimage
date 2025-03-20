@@ -45,7 +45,6 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   huePalette = huePalette.map(hex => chroma(hex));
   
   // Step 1: Convert to HSL array
-  self.postMessage({ status: 'Processing image...' });
   const hslArray = pixelDataToHslArray(pixelData, width, height);
   
   // Step 2: Luminance Range Adjustment
@@ -112,7 +111,6 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   }
   
   self.postMessage({ 
-    status: 'Processing complete',
     processedImageData: {
       data: Array.from(processedImageData.data),
       width: processedImageData.width,
@@ -125,7 +123,7 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
 /**
  * Convert pixel data to HSL array
  */
-function pixelDataToHslArray(pixelData, width, height) {
+function pixelDataToHslArray(pixelData, width) {
   const hslArray = [];
   
   for (let i = 0; i < pixelData.length; i += 4) {
@@ -239,7 +237,7 @@ function adjustLuminanceRange(hslArray, luminancePalette, outlierPercentage) {
  */
 function mapLuminance(hslArray, luminancePalette) {
   return hslArray.map(pixel => {
-    const [h, s, l] = pixel.hsl;
+    const [, , l] = pixel.hsl;
     
     // Find corresponding color on luminance palette
     const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
@@ -332,7 +330,7 @@ function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hue
   }
   
   return luminanceAdjustedArray.map((pixel, index) => {
-    const [h, s, l] = pixel.hsl;
+    const [h] = pixel.hsl;
     const luminanceMappedPixel = luminanceMappedArray[index];
     
     // Convert to RGB to check grayscale
@@ -341,8 +339,8 @@ function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hue
     // Find the closest hue in the palette
     const { color: closestColor } = colorUtils.findClosestHueColor(h, huePalette);
     const closestHsl = chroma(closestColor).hsl();
-    const hueDistance = colorUtils.hueDistance([h, s, l], [closestColor]);
-   console.log(rgbColor); 
+    const hueDistance = colorUtils.hueDistance(pixel.hsl, [closestColor]);
+    
     // Check if the color should be mapped based on thresholds
     if (!colorUtils.isGrayScale(rgbColor, settings.grayscaleThreshold) && 
         hueDistance < settings.hueThreshold) {

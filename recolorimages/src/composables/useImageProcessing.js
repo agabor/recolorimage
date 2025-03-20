@@ -86,67 +86,6 @@ const selectedPalette = reactive({
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
   };
   
-  /**
-   * Convert pixel data to HSL array
-   * @param {ImageData} pixelData - Pixel data
-   * @returns {Array} - Array of HSL pixel values
-   */
-  const pixelDataToHslArray = (pixelData) => {
-    const { data, width, height } = pixelData;
-    const hslArray = [];
-    
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const a = data[i + 3];
-      
-      const x = (i / 4) % width;
-      const y = Math.floor((i / 4) / width);
-      
-      const hsl = colorUtils.rgbToHsl([r, g, b]);
-      
-      hslArray.push({
-        x,
-        y,
-        hsl,
-        alpha: a
-      });
-    }
-    
-    return hslArray;
-  };
-  
-  /**
-   * Convert HSL array to canvas
-   * @param {Array} hslArray - Array of HSL pixel values
-   * @param {Number} width - Canvas width
-   * @param {Number} height - Canvas height
-   * @returns {HTMLCanvasElement} - Canvas element
-   */
-  const hslArrayToCanvas = (hslArray, width, height) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    
-    const ctx = canvas.getContext('2d');
-    const imageData = ctx.createImageData(width, height);
-    
-    hslArray.forEach(pixel => {
-      const { x, y, hsl, alpha } = pixel;
-      const index = (y * width + x) * 4;
-      
-      const rgb = colorUtils.hslToRgb(hsl);
-      
-      imageData.data[index] = Math.round(rgb[0]);
-      imageData.data[index + 1] = Math.round(rgb[1]);
-      imageData.data[index + 2] = Math.round(rgb[2]);
-      imageData.data[index + 3] = alpha;
-    });
-    
-    ctx.putImageData(imageData, 0, 0);
-    return canvas;
-  };
   
   /**
    * Load an image from a file
@@ -252,7 +191,7 @@ const selectedPalette = reactive({
         
         // Set up message handler
         workerInstance.onmessage = (e) => {
-          const { status, error: workerError, ...imageData } = e.data;
+          const { error: workerError, ...imageData } = e.data;
           
           if (workerError) {
             error.value = `Worker error: ${workerError}`;

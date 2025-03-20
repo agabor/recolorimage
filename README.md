@@ -159,7 +159,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Process**:
   - For each pixel:
     - Find the cluster where the pixel's hue falls within the cluster's min-max hue range
-    - If no such cluster exists, fall back to finding the closest cluster centroid
+    - If no such cluster exists, fall back to finding the closest cluster min or max value
     - Apply the mapped hue, saturation, and lightness from the selected cluster
 - **Output**: Color-adjusted HSL image
 

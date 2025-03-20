@@ -387,25 +387,34 @@ function adjustColors(hslArray, mappings) {
       }
     }
     
-    // If no cluster contains the hue, fall back to finding the closest centroid
+    // If no cluster contains the hue, fall back to finding the closest cluster min or max value
     if (!mappedColorPair) {
-      // Extract cluster hues from the mapping arrays
-      const clusterHues = hueMapping.map(pair => pair[0]);
+      // Create an array of all min and max values from clusters
+      const clusterBoundaries = [];
       
-      // Calculate distances to all cluster centers
-      const distances = clusterHues.map(clusterHue => {
-        let distance = Math.abs(h - clusterHue);
+      hueMapping.forEach(pair => {
+        const centroidHue = pair[0];
+        const minHue = pair[2];
+        const maxHue = pair[3];
+        
+        clusterBoundaries.push({ hue: minHue, centroidHue });
+        clusterBoundaries.push({ hue: maxHue, centroidHue });
+      });
+      
+      // Calculate distances to all cluster boundaries
+      const distances = clusterBoundaries.map(boundary => {
+        let distance = Math.abs(h - boundary.hue);
         if (distance > 180) {
           distance = 360 - distance;
         }
-        return { clusterHue, distance };
+        return { ...boundary, distance };
       });
       
       // Sort by distance
       distances.sort((a, b) => a.distance - b.distance);
       
-      // Get closest cluster
-      clusterHue = distances[0].clusterHue;
+      // Get closest boundary's cluster
+      clusterHue = distances[0].centroidHue;
       
       // Find the mapped values in the arrays
       mappedColorPair = hueMapping.find(pair => pair[0] === clusterHue);

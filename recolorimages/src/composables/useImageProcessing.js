@@ -158,6 +158,10 @@ const selectedPalette = reactive({
       error.value = null;
       isProcessing.value = true;
       
+      // Reset disabled hues and matched palette stats when loading a new image
+      selectedPalette.disabledHues = [];
+      matchedPaletteStats.value = [];
+      
       const img = await createImageFromFile(file);
       const canvas = createCanvasFromImage(img);
       

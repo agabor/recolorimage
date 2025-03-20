@@ -17,6 +17,7 @@ export function useImageProcessing() {
   const processedImage = ref(null);
   const luminanceAdjustedImage = ref(null);
   const luminanceMappedImage = ref(null);
+  const hueClassificationImage = ref(null);
   const colorAdjustedImage = ref(null);
   const isProcessing = ref(false);
   const progress = ref(0);
@@ -283,6 +284,14 @@ export function useImageProcessing() {
             };
           }
           
+          if (imageData.hueClassificationImageData) {
+            hueClassificationImage.value = {
+              canvas: createCanvasFromImageData(imageData.hueClassificationImageData),
+              width,
+              height
+            };
+          }
+          
           if (imageData.colorAdjustedImageData) {
             colorAdjustedImage.value = {
               canvas: createCanvasFromImageData(imageData.colorAdjustedImageData),
@@ -396,6 +405,18 @@ export function useImageProcessing() {
   };
   
   /**
+   * Get the hue classification image as a data URL
+   * @returns {string} - Data URL
+   */
+  const getHueClassificationImageUrl = () => {
+    if (!hueClassificationImage.value) {
+      return null;
+    }
+    
+    return hueClassificationImage.value.canvas.toDataURL('image/png');
+  };
+  
+  /**
    * Get the color-adjusted image as a data URL
    * @returns {string} - Data URL
    */
@@ -489,6 +510,7 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     processedImage,
     luminanceAdjustedImage,
     luminanceMappedImage,
+    hueClassificationImage,
     colorAdjustedImage,
     isProcessing,
     progress,
@@ -508,6 +530,7 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     getOriginalImageUrl,
     getLuminanceAdjustedImageUrl,
     getLuminanceMappedImageUrl,
+    getHueClassificationImageUrl,
     getColorAdjustedImageUrl,
     downloadProcessedImage,
     setPalette,

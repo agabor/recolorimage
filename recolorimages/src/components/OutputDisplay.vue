@@ -18,6 +18,10 @@ const props = defineProps({
     type: String,
     default: null
   },
+  hueClassificationImageUrl: {
+    type: String,
+    default: null
+  },
   colorAdjustedImageUrl: {
     type: String,
     default: null
@@ -107,6 +111,15 @@ const imageDimensions = computed(() => {
           
           <button 
             class="tab-btn" 
+            :class="{ active: activeTab === 'hueClassification' }"
+            @click="activeTab = 'hueClassification'"
+            :disabled="!hueClassificationImageUrl"
+          >
+            Hue Classification
+          </button>
+          
+          <button 
+            class="tab-btn" 
             :class="{ active: activeTab === 'color' }"
             @click="activeTab = 'color'"
             :disabled="!colorAdjustedImageUrl"
@@ -142,6 +155,13 @@ const imageDimensions = computed(() => {
           v-else-if="activeTab === 'luminance' && luminanceMappedImageUrl" 
           :src="luminanceMappedImageUrl" 
           alt="Luminance Mapped Image"
+          class="display-image"
+        />
+        
+        <img 
+          v-else-if="activeTab === 'hueClassification' && hueClassificationImageUrl" 
+          :src="hueClassificationImageUrl" 
+          alt="Hue Classification Image"
           class="display-image"
         />
         

@@ -96,8 +96,27 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     settings.colorCount
   );
   
-  // Step 5: Color Adjustment
-  self.postMessage({ progress: 70, status: 'Adjusting colors' });
+  // Step 5: Hue Classification
+  self.postMessage({ progress: 65, status: 'Classifying hues' });
+  const hueClassificationArray = createHueClassificationImage(
+    luminanceAdjustedArray,
+    mappings
+  );
+  
+  // Create hue classification image
+  const hueClassificationImageData = hslArrayToImageData(hueClassificationArray, width, height);
+  self.postMessage({ 
+    progress: 70, 
+    status: 'Hues classified',
+    hueClassificationImageData: {
+      data: Array.from(hueClassificationImageData.data),
+      width: hueClassificationImageData.width,
+      height: hueClassificationImageData.height
+    }
+  });
+  
+  // Step 6: Color Adjustment
+  self.postMessage({ progress: 75, status: 'Adjusting colors' });
   const colorAdjustedArray = adjustColors(
     luminanceAdjustedArray,
     mappings
@@ -115,7 +134,7 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     }
   });
   
-  // Step 6: Blending
+  // Step 7: Blending
   self.postMessage({ progress: 90, status: 'Blending images' });
   const blendedArray = blendImages(
     luminanceMappedArray,
@@ -335,6 +354,100 @@ function clusterHues(hslArray, huePalette, colorCount) {
     saturationMapping,
     lightnessMapping
   };
+}
+
+/**
+ * Create an image showing the hue classification
+ * Each pixel is colored with its mapped palette color
+ */
+function createHueClassificationImage(hslArray, mappings) {
+  const { hueMapping } = mappings;
+  
+  // If no mappings, return original array
+  if (hueMapping.length === 0) {
+    return hslArray;
+  }
+  
+  return hslArray.map(pixel => {
+    const [h, s, l] = pixel.hsl;
+    
+    if (hueMapping.length === 0) {
+      return pixel;
+    }
+    
+    // Find the cluster where the pixel's hue is between min and max hue
+    let mappedColorHex = null;
+    
+    // Check if the pixel's hue falls within any cluster's min-max range
+    for (let i = 0; i < hueMapping.length; i++) {
+      const pair = hueMapping[i];
+      const minHue = pair[2];
+      const maxHue = pair[3];
+      
+      // Handle the circular nature of hue (0-360)
+      let isInRange = false;
+      
+      if (maxHue >= minHue) {
+        // Normal case: min to max
+        isInRange = h >= minHue && h <= maxHue;
+      } else {
+        // Wrapping case: e.g., min=350, max=10
+        isInRange = h >= minHue || h <= maxHue;
+      }
+      
+      if (isInRange) {
+        mappedColorHex = pair[1];
+        break;
+      }
+    }
+    
+    // If no cluster contains the hue, fall back to finding the closest cluster min or max value
+    if (!mappedColorHex) {
+      // Create an array of all min and max values from clusters
+      const clusterBoundaries = [];
+      
+      hueMapping.forEach(pair => {
+        const centroidHue = pair[0];
+        const minHue = pair[2];
+        const maxHue = pair[3];
+        
+        clusterBoundaries.push({ hue: minHue, centroidHue });
+        clusterBoundaries.push({ hue: maxHue, centroidHue });
+      });
+      
+      // Calculate distances to all cluster boundaries
+      const distances = clusterBoundaries.map(boundary => {
+        let distance = Math.abs(h - boundary.hue);
+        if (distance > 180) {
+          distance = 360 - distance;
+        }
+        return { ...boundary, distance };
+      });
+      
+      // Sort by distance
+      distances.sort((a, b) => a.distance - b.distance);
+      
+      // Get closest boundary's cluster
+      const clusterHue = distances[0].centroidHue;
+      
+      // Find the mapped values in the arrays
+      const mappedColorPair = hueMapping.find(pair => pair[0] === clusterHue);
+      mappedColorHex = mappedColorPair ? mappedColorPair[1] : null;
+    }
+    
+    if (!mappedColorHex) {
+      return pixel;
+    }
+    
+    // Get the mapped color's HSL values
+    const mappedHsl = chroma(mappedColorHex).hsl();
+    
+    // Return a new pixel with the mapped color's HSL values
+    return {
+      ...pixel,
+      hsl: mappedHsl
+    };
+  });
 }
 
 /**

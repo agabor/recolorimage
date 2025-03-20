@@ -22,6 +22,7 @@ const {
   getProcessedImageUrl,
   getLuminanceAdjustedImageUrl,
   getLuminanceMappedImageUrl,
+  getHueClassificationImageUrl,
   getColorAdjustedImageUrl,
   downloadProcessedImage,
   setPalette,
@@ -33,6 +34,7 @@ const originalImageUrl = ref(null);
 const processedImageUrl = ref(null);
 const luminanceAdjustedImageUrl = ref(null);
 const luminanceMappedImageUrl = ref(null);
+const hueClassificationImageUrl = ref(null);
 const colorAdjustedImageUrl = ref(null);
 
 // Handle file selection
@@ -80,6 +82,7 @@ const updateImageUrls = () => {
     processedImageUrl.value = getProcessedImageUrl();
     luminanceAdjustedImageUrl.value = getLuminanceAdjustedImageUrl();
     luminanceMappedImageUrl.value = getLuminanceMappedImageUrl();
+    hueClassificationImageUrl.value = getHueClassificationImageUrl();
     colorAdjustedImageUrl.value = getColorAdjustedImageUrl();
   }
 };
@@ -137,6 +140,7 @@ watch(error, (newError) => {
             :processed-image-url="processedImageUrl"
             :luminance-adjusted-image-url="luminanceAdjustedImageUrl"
             :luminance-mapped-image-url="luminanceMappedImageUrl"
+            :hue-classification-image-url="hueClassificationImageUrl"
             :color-adjusted-image-url="colorAdjustedImageUrl"
             :image-info="imageInfo"
             :has-processed-image="hasProcessedImage"

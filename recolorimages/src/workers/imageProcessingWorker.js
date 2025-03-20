@@ -56,17 +56,10 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     settings.outlierPercentage
   );
   
-  // Create luminance-adjusted image
-  const luminanceAdjustedImageData = hslArrayToImageData(luminanceAdjustedArray, width, height);
-  // Make sure to convert the Uint8ClampedArray to a regular Array for cloning
+  // Update progress
   self.postMessage({ 
     progress: 30, 
-    status: 'Luminance adjusted',
-    luminanceAdjustedImageData: {
-      data: Array.from(luminanceAdjustedImageData.data),
-      width: luminanceAdjustedImageData.width,
-      height: luminanceAdjustedImageData.height
-    }
+    status: 'Luminance adjusted'
   });
   
   // Step 3: Luminance Mapping
@@ -76,16 +69,10 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     luminancePalette
   );
   
-  // Create luminance-mapped image
-  const luminanceMappedImageData = hslArrayToImageData(luminanceMappedArray, width, height);
+  // Update progress
   self.postMessage({ 
     progress: 50, 
-    status: 'Luminance mapped',
-    luminanceMappedImageData: {
-      data: Array.from(luminanceMappedImageData.data),
-      width: luminanceMappedImageData.width,
-      height: luminanceMappedImageData.height
-    }
+    status: 'Luminance mapped'
   });
   
   // Step 4: Hue Clustering
@@ -103,16 +90,10 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     mappings
   );
   
-  // Create hue classification image
-  const hueClassificationImageData = hslArrayToImageData(hueClassificationArray, width, height);
+  // Update progress
   self.postMessage({ 
     progress: 70, 
-    status: 'Hues classified',
-    hueClassificationImageData: {
-      data: Array.from(hueClassificationImageData.data),
-      width: hueClassificationImageData.width,
-      height: hueClassificationImageData.height
-    }
+    status: 'Hues classified'
   });
   
   // Step 5: Hue and Saturation Application

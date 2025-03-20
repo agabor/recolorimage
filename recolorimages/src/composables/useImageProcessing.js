@@ -15,9 +15,6 @@ export function useImageProcessing() {
   // State
   const originalImage = ref(null);
   const processedImage = ref(null);
-  const luminanceAdjustedImage = ref(null);
-  const luminanceMappedImage = ref(null);
-  const hueClassificationImage = ref(null);
   const isProcessing = ref(false);
   const progress = ref(0);
   const error = ref(null);
@@ -266,31 +263,6 @@ export function useImageProcessing() {
           // Update progress
           progress.value = workerProgress;
           
-          // Handle intermediate results
-          if (imageData.luminanceAdjustedImageData) {
-            luminanceAdjustedImage.value = {
-              canvas: createCanvasFromImageData(imageData.luminanceAdjustedImageData),
-              width,
-              height
-            };
-          }
-          
-          if (imageData.luminanceMappedImageData) {
-            luminanceMappedImage.value = {
-              canvas: createCanvasFromImageData(imageData.luminanceMappedImageData),
-              width,
-              height
-            };
-          }
-          
-          if (imageData.hueClassificationImageData) {
-            hueClassificationImage.value = {
-              canvas: createCanvasFromImageData(imageData.hueClassificationImageData),
-              width,
-              height
-            };
-          }
-          
           // Handle final result
           if (imageData.processedImageData && workerProgress === 100) {
             processedImage.value = {
@@ -369,42 +341,6 @@ export function useImageProcessing() {
     }
     
     return originalImage.value.canvas.toDataURL('image/png');
-  };
-  
-  /**
-   * Get the luminance-mapped image as a data URL
-   * @returns {string} - Data URL
-   */
-  const getLuminanceMappedImageUrl = () => {
-    if (!luminanceMappedImage.value) {
-      return null;
-    }
-    
-    return luminanceMappedImage.value.canvas.toDataURL('image/png');
-  };
-  
-  /**
-   * Get the luminance-adjusted image as a data URL
-   * @returns {string} - Data URL
-   */
-  const getLuminanceAdjustedImageUrl = () => {
-    if (!luminanceAdjustedImage.value) {
-      return null;
-    }
-    
-    return luminanceAdjustedImage.value.canvas.toDataURL('image/png');
-  };
-  
-  /**
-   * Get the hue classification image as a data URL
-   * @returns {string} - Data URL
-   */
-  const getHueClassificationImageUrl = () => {
-    if (!hueClassificationImage.value) {
-      return null;
-    }
-    
-    return hueClassificationImage.value.canvas.toDataURL('image/png');
   };
   
   /**
@@ -487,9 +423,6 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     // State
     originalImage,
     processedImage,
-    luminanceAdjustedImage,
-    luminanceMappedImage,
-    hueClassificationImage,
     isProcessing,
     progress,
     error,
@@ -506,9 +439,6 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     processImage,
     getProcessedImageUrl,
     getOriginalImageUrl,
-    getLuminanceAdjustedImageUrl,
-    getLuminanceMappedImageUrl,
-    getHueClassificationImageUrl,
     downloadProcessedImage,
     setPalette,
     setCustomPalette,

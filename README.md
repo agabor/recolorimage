@@ -52,7 +52,6 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 **Implemented in**: `recolorimages/src/components/OutputDisplay.vue`
 - Processed image display
 - Download button for the processed image (PNG format)
-- Toggle to view intermediate processing steps (luminance-mapped and hue-adjusted versions)
 
 ### 5. UI Features
 - Responsive design for desktop and mobile

@@ -20,9 +20,6 @@ const {
   processImage,
   getOriginalImageUrl,
   getProcessedImageUrl,
-  getLuminanceAdjustedImageUrl,
-  getLuminanceMappedImageUrl,
-  getHueClassificationImageUrl,
   downloadProcessedImage,
   setPalette,
   setCustomPalette
@@ -31,9 +28,6 @@ const {
 // Image URLs for display
 const originalImageUrl = ref(null);
 const processedImageUrl = ref(null);
-const luminanceAdjustedImageUrl = ref(null);
-const luminanceMappedImageUrl = ref(null);
-const hueClassificationImageUrl = ref(null);
 
 // Handle file selection
 const handleFileSelected = async (file) => {
@@ -78,9 +72,6 @@ const updateImageUrls = () => {
   
   if (hasProcessedImage.value) {
     processedImageUrl.value = getProcessedImageUrl();
-    luminanceAdjustedImageUrl.value = getLuminanceAdjustedImageUrl();
-    luminanceMappedImageUrl.value = getLuminanceMappedImageUrl();
-    hueClassificationImageUrl.value = getHueClassificationImageUrl();
   }
 };
 
@@ -135,9 +126,6 @@ watch(error, (newError) => {
           <OutputDisplay 
             :original-image-url="originalImageUrl"
             :processed-image-url="processedImageUrl"
-            :luminance-adjusted-image-url="luminanceAdjustedImageUrl"
-            :luminance-mapped-image-url="luminanceMappedImageUrl"
-            :hue-classification-image-url="hueClassificationImageUrl"
             :image-info="imageInfo"
             :has-processed-image="hasProcessedImage"
             @download="handleDownload"

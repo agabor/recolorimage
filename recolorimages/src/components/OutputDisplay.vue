@@ -10,18 +10,6 @@ const props = defineProps({
     type: String,
     default: null
   },
-  luminanceAdjustedImageUrl: {
-    type: String,
-    default: null
-  },
-  luminanceMappedImageUrl: {
-    type: String,
-    default: null
-  },
-  hueClassificationImageUrl: {
-    type: String,
-    default: null
-  },
   imageInfo: {
     type: Object,
     default: null
@@ -35,7 +23,6 @@ const props = defineProps({
 const emit = defineEmits(['download']);
 
 const activeTab = ref('original');
-const showIntermediateSteps = ref(false);
 
 // Reset to original tab when a new image is loaded
 watch(() => props.originalImageUrl, () => {
@@ -51,10 +38,6 @@ watch(() => props.processedImageUrl, (newUrl) => {
 
 const handleDownload = () => {
   emit('download');
-};
-
-const toggleIntermediateSteps = () => {
-  showIntermediateSteps.value = !showIntermediateSteps.value;
 };
 
 const imageDimensions = computed(() => {
@@ -85,36 +68,6 @@ const imageDimensions = computed(() => {
         >
           Processed
         </button>
-        
-        <template v-if="showIntermediateSteps">
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'luminanceAdjusted' }"
-            @click="activeTab = 'luminanceAdjusted'"
-            :disabled="!luminanceAdjustedImageUrl"
-          >
-            Luminance Adjusted
-          </button>
-          
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'luminance' }"
-            @click="activeTab = 'luminance'"
-            :disabled="!luminanceMappedImageUrl"
-          >
-            Luminance Mapped
-          </button>
-          
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'hueClassification' }"
-            @click="activeTab = 'hueClassification'"
-            :disabled="!hueClassificationImageUrl"
-          >
-            Hue Classification
-          </button>
-          
-        </template>
       </div>
       
       <div class="image-view">
@@ -129,27 +82,6 @@ const imageDimensions = computed(() => {
           v-else-if="activeTab === 'processed' && processedImageUrl" 
           :src="processedImageUrl" 
           alt="Processed Image"
-          class="display-image"
-        />
-        
-        <img 
-          v-else-if="activeTab === 'luminanceAdjusted' && luminanceAdjustedImageUrl" 
-          :src="luminanceAdjustedImageUrl" 
-          alt="Luminance Adjusted Image"
-          class="display-image"
-        />
-        
-        <img 
-          v-else-if="activeTab === 'luminance' && luminanceMappedImageUrl" 
-          :src="luminanceMappedImageUrl" 
-          alt="Luminance Mapped Image"
-          class="display-image"
-        />
-        
-        <img 
-          v-else-if="activeTab === 'hueClassification' && hueClassificationImageUrl" 
-          :src="hueClassificationImageUrl" 
-          alt="Hue Classification Image"
           class="display-image"
         />
         
@@ -175,13 +107,6 @@ const imageDimensions = computed(() => {
             Download
           </button>
           
-          <button 
-            v-if="hasProcessedImage"
-            class="action-btn toggle-btn" 
-            @click="toggleIntermediateSteps"
-          >
-            {{ showIntermediateSteps ? 'Hide Steps' : 'Show Steps' }}
-          </button>
         </div>
       </div>
     </div>

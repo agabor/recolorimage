@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps({
   isProcessing: {
@@ -20,32 +20,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['process', 'update:settings']);
-
-// Local copies of settings
-const colorCount = ref(props.settings.colorCount);
-
-// Watch for changes in settings from parent
-watch(() => props.settings, (newSettings) => {
-  colorCount.value = newSettings.colorCount;
-}, { deep: true });
-
-// Watch for changes in the palette or disabled hues
-watch(() => props.selectedPalette, (newPalette) => {
-  // Calculate the maximum allowed color count
-  const maxAllowedColors = newPalette.hue.length - (newPalette.disabledHues ? newPalette.disabledHues.length : 0);
-  
-  // If current color count exceeds the maximum, adjust it
-  if (colorCount.value > maxAllowedColors) {
-    colorCount.value = maxAllowedColors;
-    emit('update:settings', { ...props.settings, colorCount: maxAllowedColors });
-  }
-}, { deep: true });
-
-// Update settings when local values change
-watch(colorCount, (newValue) => {
-  emit('update:settings', { ...props.settings, colorCount: newValue });
-});
+const emit = defineEmits(['process']);
 
 const handleProcess = () => {
   emit('process');
@@ -55,19 +30,6 @@ const handleProcess = () => {
 <template>
   <div class="processing-controls">
     <div class="main-controls">
-      <div class="setting-group">
-        <label for="color-count">Color Count: {{ colorCount }}</label>
-        <input 
-          id="color-count"
-          type="range" 
-          v-model.number="colorCount" 
-          min="2" 
-          :max="selectedPalette.hue.length - (selectedPalette.disabledHues ? selectedPalette.disabledHues.length : 0)" 
-          step="1"
-          :disabled="isProcessing || !hasImage"
-        />
-      </div>
-      
       <button 
         class="process-btn" 
         @click="handleProcess"

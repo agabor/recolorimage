@@ -21,7 +21,6 @@ export function useImageProcessing() {
   
   // Settings
   const settings = reactive({
-    colorCount: 8,
     grayscaleThreshold: 0.1,
     hueDistanceThreshold: 15,
     slDistanceThreshold: 0.2,
@@ -308,7 +307,6 @@ const selectedPalette = reactive({
         
         // Create a plain object with the settings
         const settingsClone = {
-          colorCount: settings.colorCount,
           grayscaleThreshold: settings.grayscaleThreshold,
           hueDistanceThreshold: settings.hueDistanceThreshold,
           slDistanceThreshold: settings.slDistanceThreshold,

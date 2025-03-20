@@ -64,8 +64,7 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   // Step 4: Hue Clustering
   const mappings = clusterHues(
     luminanceAdjustedArray,
-    huePalette,
-    settings.colorCount
+    huePalette
   );
   
   
@@ -238,7 +237,7 @@ function mapLuminance(hslArray, luminancePalette) {
 /**
  * Bucket hues and create mappings
  */
-function clusterHues(hslArray, huePalette, colorCount) {
+function clusterHues(hslArray, huePalette) {
   // Filter pixels that are mappable to hue palette
   const mappablePixels = hslArray.filter(pixel => 
     colorUtils.isHueMappable(pixel.hsl, huePalette)
@@ -265,8 +264,7 @@ function clusterHues(hslArray, huePalette, colorCount) {
   
   // Take only the top colorCount buckets (or fewer if there aren't enough non-empty buckets)
   const selectedBucketIndices = bucketIndices
-    .filter(index => paletteBuckets[index].length > 0)
-    .slice(0, colorCount);
+    .filter(index => paletteBuckets[index].length > 0);
   
   // Create mappings as arrays of key-value pairs
   const hueMapping = [];

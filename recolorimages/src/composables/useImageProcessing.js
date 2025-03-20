@@ -18,7 +18,6 @@ export function useImageProcessing() {
   const luminanceAdjustedImage = ref(null);
   const luminanceMappedImage = ref(null);
   const hueClassificationImage = ref(null);
-  const colorAdjustedImage = ref(null);
   const isProcessing = ref(false);
   const progress = ref(0);
   const error = ref(null);
@@ -292,14 +291,6 @@ export function useImageProcessing() {
             };
           }
           
-          if (imageData.colorAdjustedImageData) {
-            colorAdjustedImage.value = {
-              canvas: createCanvasFromImageData(imageData.colorAdjustedImageData),
-              width,
-              height
-            };
-          }
-          
           // Handle final result
           if (imageData.processedImageData && workerProgress === 100) {
             processedImage.value = {
@@ -417,18 +408,6 @@ export function useImageProcessing() {
   };
   
   /**
-   * Get the color-adjusted image as a data URL
-   * @returns {string} - Data URL
-   */
-  const getColorAdjustedImageUrl = () => {
-    if (!colorAdjustedImage.value) {
-      return null;
-    }
-    
-    return colorAdjustedImage.value.canvas.toDataURL('image/png');
-  };
-  
-  /**
    * Download the processed image
    * @param {string} filename - Filename for the downloaded image
    */
@@ -511,7 +490,6 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     luminanceAdjustedImage,
     luminanceMappedImage,
     hueClassificationImage,
-    colorAdjustedImage,
     isProcessing,
     progress,
     error,
@@ -531,7 +509,6 @@ const setCustomPalette = (luminancePalette, huePalette) => {
     getLuminanceAdjustedImageUrl,
     getLuminanceMappedImageUrl,
     getHueClassificationImageUrl,
-    getColorAdjustedImageUrl,
     downloadProcessedImage,
     setPalette,
     setCustomPalette,

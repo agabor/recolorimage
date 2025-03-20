@@ -115,35 +115,16 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     }
   });
   
-  // Step 6: Color Adjustment
-  self.postMessage({ progress: 75, status: 'Adjusting colors' });
-  const colorAdjustedArray = adjustColors(
+  // Step 5: Hue and Saturation Application
+  self.postMessage({ progress: 85, status: 'Applying hue and saturation' });
+  const finalArray = applyHueAndSaturation(
     luminanceAdjustedArray,
+    luminanceMappedArray,
     mappings
   );
   
-  // Create color-adjusted image
-  const colorAdjustedImageData = hslArrayToImageData(colorAdjustedArray, width, height);
-  self.postMessage({ 
-    progress: 80, 
-    status: 'Colors adjusted',
-    colorAdjustedImageData: {
-      data: Array.from(colorAdjustedImageData.data),
-      width: colorAdjustedImageData.width,
-      height: colorAdjustedImageData.height
-    }
-  });
-  
-  // Step 7: Blending
-  self.postMessage({ progress: 90, status: 'Blending images' });
-  const blendedArray = blendImages(
-    luminanceMappedArray,
-    colorAdjustedArray,
-    huePalette
-  );
-  
-  // Step 7: Output Generation
-  const processedImageData = hslArrayToImageData(blendedArray, width, height);
+  // Step 6: Output Generation
+  const processedImageData = hslArrayToImageData(finalArray, width, height);
   self.postMessage({ 
     progress: 100, 
     status: 'Processing complete',
@@ -451,27 +432,22 @@ function createHueClassificationImage(hslArray, mappings) {
 }
 
 /**
- * Adjust colors based on hue clustering
+ * Apply hue and saturation of mapped colors to the luminance-mapped image
  */
-function adjustColors(hslArray, mappings) {
-  const { hueMapping, saturationMapping, lightnessMapping } = mappings;
+function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, mappings) {
+  const { hueMapping } = mappings;
   
-  // If no mappings, return original array
+  // If no mappings, return luminance-mapped array
   if (hueMapping.length === 0) {
-    return hslArray;
+    return luminanceMappedArray;
   }
   
-  return hslArray.map(pixel => {
+  return luminanceAdjustedArray.map((pixel, index) => {
     const [h, s, l] = pixel.hsl;
+    const luminanceMappedPixel = luminanceMappedArray[index];
     
-    if (hueMapping.length === 0) {
-      return pixel;
-    }
-    
-    // Find the cluster where the pixel's hue is between min and max hue
+    // Find the cluster where the pixel's hue falls within the cluster's min-max range
     let mappedColorPair = null;
-    let saturationScalePair = null;
-    let lightnessScalePair = null;
     let clusterHue = null;
     
     // Check if the pixel's hue falls within any cluster's min-max range
@@ -494,94 +470,28 @@ function adjustColors(hslArray, mappings) {
       if (isInRange) {
         mappedColorPair = pair;
         clusterHue = pair[0];
-        saturationScalePair = saturationMapping.find(p => p[0] === clusterHue);
-        lightnessScalePair = lightnessMapping.find(p => p[0] === clusterHue);
         break;
       }
     }
     
-    // If no cluster contains the hue, fall back to finding the closest cluster min or max value
+    // If no cluster contains the hue, use the corresponding pixel from the luminance-mapped image
     if (!mappedColorPair) {
-      // Create an array of all min and max values from clusters
-      const clusterBoundaries = [];
-      
-      hueMapping.forEach(pair => {
-        const centroidHue = pair[0];
-        const minHue = pair[2];
-        const maxHue = pair[3];
-        
-        clusterBoundaries.push({ hue: minHue, centroidHue });
-        clusterBoundaries.push({ hue: maxHue, centroidHue });
-      });
-      
-      // Calculate distances to all cluster boundaries
-      const distances = clusterBoundaries.map(boundary => {
-        let distance = Math.abs(h - boundary.hue);
-        if (distance > 180) {
-          distance = 360 - distance;
-        }
-        return { ...boundary, distance };
-      });
-      
-      // Sort by distance
-      distances.sort((a, b) => a.distance - b.distance);
-      
-      // Get closest boundary's cluster
-      clusterHue = distances[0].centroidHue;
-      
-      // Find the mapped values in the arrays
-      mappedColorPair = hueMapping.find(pair => pair[0] === clusterHue);
-      saturationScalePair = saturationMapping.find(pair => pair[0] === clusterHue);
-      lightnessScalePair = lightnessMapping.find(pair => pair[0] === clusterHue);
+      return luminanceMappedPixel;
     }
     
-    const mappedColor = mappedColorPair ? mappedColorPair[1] : null;
-    const minHue = mappedColorPair ? mappedColorPair[2] : null;
-    const maxHue = mappedColorPair ? mappedColorPair[3] : null;
-    const saturationScale = saturationScalePair ? saturationScalePair[1] : 1;
-    const lightnessScale = lightnessScalePair ? lightnessScalePair[1] : 1;
+    const mappedColor = mappedColorPair[1];
     
-    if (!mappedColor) {
-      return pixel;
-    }
-    
-    // Get mapped hue
+    // Get mapped hue and saturation
     const mappedHsl = chroma(mappedColor).hsl();
     const mappedHue = mappedHsl[0];
+    const mappedSaturation = mappedHsl[1];
     
-    // Use the mapped hue as the base value
-    let adjustedHue = mappedHue;
-    
-    const adjustedSaturation = Math.min(1, s * saturationScale);
-    const adjustedLightness = Math.min(1, l * lightnessScale);
+    // Use the luminance value from the luminance-mapped pixel
+    const luminanceValue = luminanceMappedPixel.hsl[2];
     
     return {
       ...pixel,
-      hsl: [adjustedHue, adjustedSaturation, adjustedLightness]
-    };
-  });
-}
-
-/**
- * Blend luminance-mapped and color-adjusted images
- */
-function blendImages(luminanceArray, colorArray, huePalette) {
-  return luminanceArray.map((lumPixel, index) => {
-    const colorPixel = colorArray[index];
-    
-    // Calculate blend factor
-    const factor = colorUtils.blendFactor(colorPixel.hsl, huePalette);
-    
-    // Linear interpolation between luminance and color pixels
-    const blendedHsl = [
-      colorPixel.hsl[0], // Use hue from color-adjusted pixel
-      lumPixel.hsl[1] * (1 - factor) + colorPixel.hsl[1] * factor, // Blend saturation
-      lumPixel.hsl[2] * (1 - factor) + colorPixel.hsl[2] * factor  // Blend lightness
-    ];
-    
-    return {
-      ...lumPixel,
-      hsl: blendedHsl
+      hsl: [mappedHue, mappedSaturation, luminanceValue]
     };
   });
 }

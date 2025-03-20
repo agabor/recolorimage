@@ -153,26 +153,17 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
   - Saturation mapping: Map from cluster centers to saturation scale factors
   - Lightness mapping: Map from cluster centers to lightness scale factors
 
-#### 5. Color Adjustment
-**Implemented in**: `imageProcessingWorker.js` (adjustColors function)
-- **Input**: Luminance-adjusted HSL image, hue/saturation/lightness mappings
+#### 5. Hue and Saturation Application
+**Implemented in**: `imageProcessingWorker.js` (applyHueAndSaturation function)
+- **Input**: Luminance-adjusted HSL image, Luminance-mapped image, hue palette
 - **Process**:
-  - For each pixel:
+  - For each pixel in the Luminance-adjusted HSL image:
     - Find the cluster where the pixel's hue falls within the cluster's min-max hue range
-    - If no such cluster exists, fall back to finding the closest cluster min or max value
-    - Apply the mapped hue, saturation, and lightness from the selected cluster
-- **Output**: Color-adjusted HSL image
+    - Apply the hue and saturation of the mapped color while preserving the luminance value
+    - if no such cluster exists, use the corresponding pixel from the Luminance-mapped image 
+- **Output**: Final HSL image with applied hue and saturation
 
-#### 6. Blending
-**Implemented in**: `imageProcessingWorker.js` (blendImages function)
-- **Input**: Luminance-mapped image, color-adjusted image
-- **Process**:
-  - For each pixel:
-    - Calculate blend factor based on pixel properties
-    - Apply linear interpolation: FinalPixel = (LuminancePixel × (1-blendFactor)) + (ColorAdjustedPixel × blendFactor)
-- **Output**: Blended HSL image
-
-#### 7. Output Generation
+#### 6. Output Generation
 **Implemented in**: `imageProcessingWorker.js` (hslArrayToImageData) and `useImageProcessing.js` (getProcessedImageUrl, downloadProcessedImage)
 - **Input**: Blended HSL image
 - **Process**:

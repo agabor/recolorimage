@@ -22,10 +22,6 @@ const props = defineProps({
     type: String,
     default: null
   },
-  colorAdjustedImageUrl: {
-    type: String,
-    default: null
-  },
   imageInfo: {
     type: Object,
     default: null
@@ -118,14 +114,6 @@ const imageDimensions = computed(() => {
             Hue Classification
           </button>
           
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'color' }"
-            @click="activeTab = 'color'"
-            :disabled="!colorAdjustedImageUrl"
-          >
-            Color Adjusted
-          </button>
         </template>
       </div>
       
@@ -162,13 +150,6 @@ const imageDimensions = computed(() => {
           v-else-if="activeTab === 'hueClassification' && hueClassificationImageUrl" 
           :src="hueClassificationImageUrl" 
           alt="Hue Classification Image"
-          class="display-image"
-        />
-        
-        <img 
-          v-else-if="activeTab === 'color' && colorAdjustedImageUrl" 
-          :src="colorAdjustedImageUrl" 
-          alt="Color Adjusted Image"
           class="display-image"
         />
         

@@ -146,12 +146,8 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
     - Store the cluster centroid (average hue)
     - Find and store the minimum and maximum hue values in the cluster
     - Map cluster center hue to closest hue in palette
-    - Calculate average saturation and lightness of cluster
-    - Calculate saturation and lightness scale factors relative to mapped palette color
 - **Output**:
   - Hue mapping: Map from cluster centers to palette hues, including min/max hue values for each cluster
-  - Saturation mapping: Map from cluster centers to saturation scale factors
-  - Lightness mapping: Map from cluster centers to lightness scale factors
 
 #### 5. Hue and Saturation Application
 **Implemented in**: `imageProcessingWorker.js` (applyHueAndSaturation function)

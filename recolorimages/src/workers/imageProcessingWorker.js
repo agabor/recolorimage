@@ -267,13 +267,9 @@ function clusterHues(hslArray, huePalette, colorCount) {
     colorUtils.isHueMappable(pixel.hsl, huePalette)
   );
   
-  // If no mappable pixels, return empty mappings as arrays
+  // If no mappable pixels, return empty array
   if (mappablePixels.length === 0) {
-    return {
-      hueMapping: [],
-      saturationMapping: [],
-      lightnessMapping: []
-    };
+    return [];
   }
   
   // Extract hue values for clustering
@@ -286,8 +282,6 @@ function clusterHues(hslArray, huePalette, colorCount) {
   // Create mappings as arrays of key-value pairs instead of Maps
   // to ensure they can be cloned when sent back to the main thread
   const hueMapping = [];
-  const saturationMapping = [];
-  const lightnessMapping = [];
   
   // Process each cluster
   for (let i = 0; i < centroids.length; i++) {
@@ -307,43 +301,19 @@ function clusterHues(hslArray, huePalette, colorCount) {
     const { color: mappedColor, index: mappedIndex } = 
       colorUtils.findClosestHueColor(clusterHue, huePalette);
     
-    // Calculate average saturation and lightness of cluster
-    const avgSaturation = clusterPixels.reduce((sum, pixel) => 
-      sum + pixel.hsl[1], 0) / clusterPixels.length;
-    
-    const avgLightness = clusterPixels.reduce((sum, pixel) => 
-      sum + pixel.hsl[2], 0) / clusterPixels.length;
-    
-    // Get mapped color's saturation and lightness
-    const mappedHsl = chroma(mappedColor).hsl();
-    const mappedSaturation = mappedHsl[1];
-    const mappedLightness = mappedHsl[2];
-    
-    // Calculate scale factors
-    const saturationScale = mappedSaturation > 0 ? avgSaturation / mappedSaturation : 1;
-    const lightnessScale = mappedLightness > 0 ? avgLightness / mappedLightness : 1;
-    
     // Store mappings as key-value pairs in arrays
     // Include the min and max hue values along with the centroid and mapped color
     hueMapping.push([clusterHue, mappedColor, minHue, maxHue]);
-    saturationMapping.push([clusterHue, saturationScale]);
-    lightnessMapping.push([clusterHue, lightnessScale]);
   }
   
-  return {
-    hueMapping,
-    saturationMapping,
-    lightnessMapping
-  };
+  return hueMapping;
 }
 
 /**
  * Create an image showing the hue classification
  * Each pixel is colored with its mapped palette color
  */
-function createHueClassificationImage(hslArray, mappings) {
-  const { hueMapping } = mappings;
-  
+function createHueClassificationImage(hslArray, hueMapping) {
   // If no mappings, return original array
   if (hueMapping.length === 0) {
     return hslArray;
@@ -351,10 +321,6 @@ function createHueClassificationImage(hslArray, mappings) {
   
   return hslArray.map(pixel => {
     const [h, s, l] = pixel.hsl;
-    
-    if (hueMapping.length === 0) {
-      return pixel;
-    }
     
     // Find the cluster where the pixel's hue is between min and max hue
     let mappedColorHex = null;
@@ -434,9 +400,7 @@ function createHueClassificationImage(hslArray, mappings) {
 /**
  * Apply hue and saturation of mapped colors to the luminance-mapped image
  */
-function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, mappings) {
-  const { hueMapping } = mappings;
-  
+function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hueMapping) {
   // If no mappings, return luminance-mapped array
   if (hueMapping.length === 0) {
     return luminanceMappedArray;

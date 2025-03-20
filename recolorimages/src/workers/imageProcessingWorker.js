@@ -249,29 +249,23 @@ function clusterHues(hslArray, huePalette, colorCount) {
     return [];
   }
   
-  // Extract hue values for bucketing
-  const hueValues = mappablePixels.map(pixel => pixel.hsl[0]);
+  // Create a bucket for each hue palette color
+  const paletteBuckets = Array(huePalette.length).fill().map(() => []);
   
-  // Create buckets for hue values (0-360)
-  // Using more buckets than colorCount for better granularity
-  const bucketCount = 36; // Divides 360 into 10-degree buckets
-  const buckets = Array(bucketCount).fill(0);
-  const bucketPixels = Array(bucketCount).fill().map(() => []);
-  
-  // Assign pixels to buckets
-  hueValues.forEach((hue, index) => {
-    const bucketIndex = Math.floor((hue / 360) * bucketCount) % bucketCount;
-    buckets[bucketIndex]++;
-    bucketPixels[bucketIndex].push(mappablePixels[index]);
+  // Assign each pixel to the bucket with the closest hue color
+  mappablePixels.forEach(pixel => {
+    const hue = pixel.hsl[0];
+    const { index: closestPaletteIndex } = colorUtils.findClosestHueColor(hue, huePalette);
+    paletteBuckets[closestPaletteIndex].push(pixel);
   });
   
-  // Find the colorCount number of biggest buckets
-  const bucketIndices = Array.from({ length: bucketCount }, (_, i) => i);
-  bucketIndices.sort((a, b) => buckets[b] - buckets[a]);
+  // Sort buckets by number of pixels (descending)
+  const bucketIndices = Array.from({ length: huePalette.length }, (_, i) => i);
+  bucketIndices.sort((a, b) => paletteBuckets[b].length - paletteBuckets[a].length);
   
   // Take only the top colorCount buckets (or fewer if there aren't enough non-empty buckets)
   const selectedBucketIndices = bucketIndices
-    .filter(index => buckets[index] > 0)
+    .filter(index => paletteBuckets[index].length > 0)
     .slice(0, colorCount);
   
   // Create mappings as arrays of key-value pairs
@@ -279,7 +273,7 @@ function clusterHues(hslArray, huePalette, colorCount) {
   
   // Process each selected bucket
   for (const bucketIndex of selectedBucketIndices) {
-    const pixelsInBucket = bucketPixels[bucketIndex];
+    const pixelsInBucket = paletteBuckets[bucketIndex];
     
     if (pixelsInBucket.length === 0) continue;
     
@@ -299,9 +293,8 @@ function clusterHues(hslArray, huePalette, colorCount) {
       }
     }
     
-    // Map bucket average hue to closest hue in palette
-    const { color: mappedColor, index: mappedIndex } = 
-      colorUtils.findClosestHueColor(avgHue, huePalette);
+    // Get the palette color for this bucket
+    const mappedColor = huePalette[bucketIndex];
     
     // Store mappings as key-value pairs in arrays
     // Include the min and max hue values along with the average hue and mapped color

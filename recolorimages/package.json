@@ -14,7 +14,6 @@
 	},
 	"dependencies": {
 		"chroma-js": "^3.1.2",
-		"ml-kmeans": "^6.0.0",
 		"vue": "^3.5.13"
 	},
 	"devDependencies": {

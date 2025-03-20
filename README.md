@@ -8,8 +8,6 @@ A Vue.js application that transforms images by mapping their colors to a custom 
 - **Image Processing**:
   - HTML5 Canvas API for pixel-level image manipulation
   - Chroma.js for color space conversions and manipulations
-- **Color Analysis**:
-  - ml-kmeans for color clustering (https://www.npmjs.com/package/ml-kmeans)
 - **Build Tool**: Vite (as indicated by project structure)
 
 ## Application Structure
@@ -135,18 +133,20 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
     - Replace pixel with palette color
 - **Output**: Luminance-mapped image
 
-#### 4. Hue Clustering
+#### 4. Hue Bucketing
 **Implemented in**: `imageProcessingWorker.js` (clusterHues function)
 - **Input**: Luminance-adjusted HSL image, hue palette, number of hue classes
 - **Process**:
   - Filter pixels where isHueMappable returns true
-  - Run K-means clustering on hue values of filtered pixels
-  - For each cluster:
-    - Store the cluster centroid (average hue)
-    - Find and store the minimum and maximum hue values in the cluster
-    - Map cluster center hue to closest hue in palette
+  - Divide the hue range (0-360) into buckets
+  - Count the number of pixels that fall into each bucket
+  - Take the colorCount number of biggest buckets (by pixel count)
+  - For each selected bucket:
+    - Calculate the average hue in the bucket
+    - Find and store the minimum and maximum hue values in the bucket
+    - Map bucket average hue to closest hue in palette
 - **Output**:
-  - Hue mapping: Map from cluster centers to palette hues, including min/max hue values for each cluster
+  - Hue mapping: Map from bucket average hues to palette hues, including min/max hue values for each bucket
 
 #### 5. Hue and Saturation Application
 **Implemented in**: `imageProcessingWorker.js` (applyHueAndSaturation function)

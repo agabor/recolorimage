@@ -3,7 +3,6 @@
  * This worker handles the CPU-intensive image processing tasks
  * to prevent UI freezing
  */
-import { kmeans } from 'ml-kmeans';
 import chroma from 'chroma-js';
 import * as colorUtils from '../utils/colorUtils';
 
@@ -220,7 +219,7 @@ function mapLuminance(hslArray, luminancePalette) {
 }
 
 /**
- * Cluster hues and create mappings
+ * Bucket hues and create mappings
  */
 function clusterHues(hslArray, huePalette, colorCount) {
   // Filter pixels that are mappable to hue palette
@@ -233,31 +232,48 @@ function clusterHues(hslArray, huePalette, colorCount) {
     return [];
   }
   
-  // Extract hue values for clustering
-  const hueValues = mappablePixels.map(pixel => [pixel.hsl[0]]);
+  // Extract hue values for bucketing
+  const hueValues = mappablePixels.map(pixel => pixel.hsl[0]);
   
-  // Run K-means clustering on hue values
-  const clusterCount = Math.min(colorCount, mappablePixels.length);
-  const { clusters, centroids } = kmeans(hueValues, clusterCount);
+  // Create buckets for hue values (0-360)
+  // Using more buckets than colorCount for better granularity
+  const bucketCount = 36; // Divides 360 into 10-degree buckets
+  const buckets = Array(bucketCount).fill(0);
+  const bucketPixels = Array(bucketCount).fill().map(() => []);
   
-  // Create mappings as arrays of key-value pairs instead of Maps
-  // to ensure they can be cloned when sent back to the main thread
+  // Assign pixels to buckets
+  hueValues.forEach((hue, index) => {
+    const bucketIndex = Math.floor((hue / 360) * bucketCount) % bucketCount;
+    buckets[bucketIndex]++;
+    bucketPixels[bucketIndex].push(mappablePixels[index]);
+  });
+  
+  // Find the colorCount number of biggest buckets
+  const bucketIndices = Array.from({ length: bucketCount }, (_, i) => i);
+  bucketIndices.sort((a, b) => buckets[b] - buckets[a]);
+  
+  // Take only the top colorCount buckets (or fewer if there aren't enough non-empty buckets)
+  const selectedBucketIndices = bucketIndices
+    .filter(index => buckets[index] > 0)
+    .slice(0, colorCount);
+  
+  // Create mappings as arrays of key-value pairs
   const hueMapping = [];
   
-  // Process each cluster
-  for (let i = 0; i < centroids.length; i++) {
-    const clusterHue = centroids[i][0];
+  // Process each selected bucket
+  for (const bucketIndex of selectedBucketIndices) {
+    const pixelsInBucket = bucketPixels[bucketIndex];
     
-    // Find pixels in this cluster
-    const clusterPixels = mappablePixels.filter((_, index) => 
-      clusters[index] === i
-    );
+    if (pixelsInBucket.length === 0) continue;
     
-    // Find the lowest and highest hue values in this cluster
-    const clusterHues = clusterPixels.map(pixel => pixel.hsl[0]);
+    // Calculate average hue in the bucket
+    const huesInBucket = pixelsInBucket.map(pixel => pixel.hsl[0]);
+    const avgHue = huesInBucket.reduce((sum, hue) => sum + hue, 0) / huesInBucket.length;
+    
+    // Find the lowest and highest hue values in this bucket
     let minHue = 1000;
     let maxHue = -1000;
-    for (let hue of clusterHues) {
+    for (let hue of huesInBucket) {
       if (hue < minHue) {
         minHue = hue;
       }
@@ -266,13 +282,13 @@ function clusterHues(hslArray, huePalette, colorCount) {
       }
     }
     
-    // Map cluster center hue to closest hue in palette
+    // Map bucket average hue to closest hue in palette
     const { color: mappedColor, index: mappedIndex } = 
-      colorUtils.findClosestHueColor(clusterHue, huePalette);
+      colorUtils.findClosestHueColor(avgHue, huePalette);
     
     // Store mappings as key-value pairs in arrays
-    // Include the min and max hue values along with the centroid and mapped color
-    hueMapping.push([clusterHue, mappedColor, minHue, maxHue]);
+    // Include the min and max hue values along with the average hue and mapped color
+    hueMapping.push([avgHue, mappedColor, minHue, maxHue]);
   }
   
   return hueMapping;

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   isProcessing: {
@@ -20,7 +20,18 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['process']);
+const emit = defineEmits(['process', 'update:settings']);
+
+const hueThreshold = ref(props.settings.hueThreshold ?? 60);
+const grayscaleThreshold = ref(props.settings.grayscaleThreshold ?? 30);
+
+watch([hueThreshold, grayscaleThreshold], ([newHue, newGray]) => {
+  emit('update:settings', {
+    ...props.settings,
+    hueThreshold: newHue,
+    grayscaleThreshold: newGray
+  });
+});
 
 const handleProcess = () => {
   emit('process');
@@ -30,6 +41,30 @@ const handleProcess = () => {
 <template>
   <div class="processing-controls">
     <div class="main-controls">
+      <div class="setting-group">
+        <label>Hue Threshold (degrees)</label>
+        <input 
+          type="range" 
+          v-model="hueThreshold" 
+          min="1" 
+          max="180" 
+          :disabled="isProcessing"
+        >
+        <span class="value-display">{{ hueThreshold }}°</span>
+      </div>
+
+      <div class="setting-group">
+        <label>Grayscale Threshold</label>
+        <input 
+          type="range" 
+          v-model="grayscaleThreshold" 
+          min="1" 
+          max="100" 
+          :disabled="isProcessing"
+        >
+        <span class="value-display">{{ grayscaleThreshold }}</span>
+      </div>
+
       <button 
         class="process-btn" 
         @click="handleProcess"
@@ -74,6 +109,18 @@ const handleProcess = () => {
   color: #333;
 }
 
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.setting-group label {
+  font-weight: bold;
+  color: #333;
+}
+
 .setting-group input[type="range"] {
   width: 100%;
   height: 8px;
@@ -95,6 +142,12 @@ const handleProcess = () => {
 
 .setting-group input[type="range"]:disabled {
   opacity: 0.5;
+}
+
+.value-display {
+  font-size: 0.9rem;
+  color: #666;
+  text-align: right;
 }
 
 .process-btn {

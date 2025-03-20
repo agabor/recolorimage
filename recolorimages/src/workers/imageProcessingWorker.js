@@ -64,14 +64,17 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   // Step 4: Hue Clustering
   const { mappings, paletteBuckets, selectedBucketIndices } = clusterHues(
     luminanceAdjustedArray,
-    huePalette
+    huePalette,
+    settings
   );
   
   // Step 5: Hue and Saturation Application
   const finalArray = applyHueAndSaturation(
     luminanceAdjustedArray,
     luminanceMappedArray,
-    mappings
+    mappings,
+    huePalette,
+    settings
   );
   
   // Step 6: Output Generation
@@ -252,11 +255,13 @@ function mapLuminance(hslArray, luminancePalette) {
 /**
  * Bucket hues and create mappings
  */
-function clusterHues(hslArray, huePalette) {
+function clusterHues(hslArray, huePalette, settings) {
   // Filter pixels that are mappable to hue palette
-  const mappablePixels = hslArray.filter(pixel => 
-    colorUtils.isHueMappable(pixel.hsl, huePalette)
-  );
+  const mappablePixels = hslArray.filter(pixel => {
+    const rgbColor = chroma.hsl(...pixel.hsl).rgb();
+    return !colorUtils.isGrayScale(rgbColor, settings.grayscaleThreshold) && 
+           colorUtils.isHueOnPalette(pixel.hsl, huePalette, settings.hueThreshold); 
+  });
   
   // If no mappable pixels, return empty array
   if (mappablePixels.length === 0) {
@@ -318,97 +323,9 @@ function clusterHues(hslArray, huePalette) {
 }
 
 /**
- * Create an image showing the hue classification
- * Each pixel is colored with its mapped palette color
- */
-function createHueClassificationImage(hslArray, hueMapping) {
-  // If no mappings, return original array
-  if (hueMapping.length === 0) {
-    return hslArray;
-  }
-  
-  return hslArray.map(pixel => {
-    const [h, s, l] = pixel.hsl;
-    
-    // Find the cluster where the pixel's hue is between min and max hue
-    let mappedColorHex = null;
-    
-    // Check if the pixel's hue falls within any cluster's min-max range
-    for (let i = 0; i < hueMapping.length; i++) {
-      const pair = hueMapping[i];
-      const minHue = pair[2];
-      const maxHue = pair[3];
-      
-      // Handle the circular nature of hue (0-360)
-      let isInRange = false;
-      
-      if (maxHue >= minHue) {
-        // Normal case: min to max
-        isInRange = h >= minHue && h <= maxHue;
-      } else {
-        // Wrapping case: e.g., min=350, max=10
-        isInRange = h >= minHue || h <= maxHue;
-      }
-      
-      if (isInRange) {
-        mappedColorHex = pair[1];
-        break;
-      }
-    }
-    
-    // If no cluster contains the hue, fall back to finding the closest cluster min or max value
-    if (!mappedColorHex) {
-      // Create an array of all min and max values from clusters
-      const clusterBoundaries = [];
-      
-      hueMapping.forEach(pair => {
-        const centroidHue = pair[0];
-        const minHue = pair[2];
-        const maxHue = pair[3];
-        
-        clusterBoundaries.push({ hue: minHue, centroidHue });
-        clusterBoundaries.push({ hue: maxHue, centroidHue });
-      });
-      
-      // Calculate distances to all cluster boundaries
-      const distances = clusterBoundaries.map(boundary => {
-        let distance = Math.abs(h - boundary.hue);
-        if (distance > 180) {
-          distance = 360 - distance;
-        }
-        return { ...boundary, distance };
-      });
-      
-      // Sort by distance
-      distances.sort((a, b) => a.distance - b.distance);
-      
-      // Get closest boundary's cluster
-      const clusterHue = distances[0].centroidHue;
-      
-      // Find the mapped values in the arrays
-      const mappedColorPair = hueMapping.find(pair => pair[0] === clusterHue);
-      mappedColorHex = mappedColorPair ? mappedColorPair[1] : null;
-    }
-    
-    if (!mappedColorHex) {
-      return pixel;
-    }
-    
-    // Get the mapped color's HSL values
-    const mappedHsl = chroma(mappedColorHex).hsl();
-    
-    // Return a new pixel with the mapped color's HSL values
-    return {
-      ...pixel,
-      hsl: mappedHsl
-    };
-  });
-}
-
-/**
  * Apply hue and saturation of mapped colors to the luminance-mapped image
  */
-function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hueMapping) {
+function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hueMapping, huePalette, settings) {
   // If no mappings, return luminance-mapped array
   if (hueMapping.length === 0) {
     return luminanceMappedArray;
@@ -418,52 +335,31 @@ function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hue
     const [h, s, l] = pixel.hsl;
     const luminanceMappedPixel = luminanceMappedArray[index];
     
-    // Find the cluster where the pixel's hue falls within the cluster's min-max range
-    let mappedColorPair = null;
-    let clusterHue = null;
+    // Convert to RGB to check grayscale
+    const rgbColor = chroma.hsl(...pixel.hsl).rgb();
     
-    // Check if the pixel's hue falls within any cluster's min-max range
-    for (let i = 0; i < hueMapping.length; i++) {
-      const pair = hueMapping[i];
-      const minHue = pair[2];
-      const maxHue = pair[3];
+    // Find the closest hue in the palette
+    const { color: closestColor } = colorUtils.findClosestHueColor(h, huePalette);
+    const closestHsl = chroma(closestColor).hsl();
+    const hueDistance = colorUtils.hueDistance([h, s, l], [closestColor]);
+   console.log(rgbColor); 
+    // Check if the color should be mapped based on thresholds
+    if (!colorUtils.isGrayScale(rgbColor, settings.grayscaleThreshold) && 
+        hueDistance < settings.hueThreshold) {
+      // Get mapped hue and saturation from closest palette color
+      const mappedHue = closestHsl[0];
+      const mappedSaturation = closestHsl[1];
       
-      // Handle the circular nature of hue (0-360)
-      let isInRange = false;
+      // Use the luminance value from the luminance-mapped pixel
+      const luminanceValue = luminanceMappedPixel.hsl[2];
       
-      if (maxHue >= minHue) {
-        // Normal case: min to max
-        isInRange = h >= minHue && h <= maxHue;
-      } else {
-        // Wrapping case: e.g., min=350, max=10
-        isInRange = h >= minHue || h <= maxHue;
-      }
-      
-      if (isInRange) {
-        mappedColorPair = pair;
-        clusterHue = pair[0];
-        break;
-      }
+      return {
+        ...pixel,
+        hsl: [mappedHue, mappedSaturation, luminanceValue]
+      };
     }
     
-    // If no cluster contains the hue, use the corresponding pixel from the luminance-mapped image
-    if (!mappedColorPair) {
-      return luminanceMappedPixel;
-    }
-    
-    const mappedColor = mappedColorPair[1];
-    
-    // Get mapped hue and saturation
-    const mappedHsl = chroma(mappedColor).hsl();
-    const mappedHue = mappedHsl[0];
-    const mappedSaturation = mappedHsl[1];
-    
-    // Use the luminance value from the luminance-mapped pixel
-    const luminanceValue = luminanceMappedPixel.hsl[2];
-    
-    return {
-      ...pixel,
-      hsl: [mappedHue, mappedSaturation, luminanceValue]
-    };
+    // If color doesn't meet threshold criteria, use luminance-mapped color
+    return luminanceMappedPixel;
   });
 }

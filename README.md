@@ -135,27 +135,31 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 
 #### 4. Hue Bucketing
 **Implemented in**: `imageProcessingWorker.js` (clusterHues function)
-- **Input**: Luminance-adjusted HSL image, hue palette, number of hue classes
+- **Input**: Luminance-adjusted HSL image, hue palette, grayscaleThreshold, hueThreshold
 - **Process**:
-  - Filter pixels where isHueMappable returns true
-  - Divide the hue range (0-360) into buckets
-  - Count the number of pixels that fall into each bucket
-  - Take the colorCount number of biggest buckets (by pixel count)
-  - For each selected bucket:
-    - Calculate the average hue in the bucket
+  - Filter pixels based on two criteria:
+    1. Not grayscale (using grayscaleThreshold)
+    2. Have a hue close to a palette hue (within hueThreshold)
+  - For each palette color, create a bucket
+  - Assign each mappable pixel to the bucket with the closest hue color
+  - For each non-empty bucket:
+    - Calculate the average hue of pixels in the bucket
     - Find and store the minimum and maximum hue values in the bucket
-    - Map bucket average hue to closest hue in palette
+    - Map the bucket to its corresponding palette color
 - **Output**:
   - Hue mapping: Map from bucket average hues to palette hues, including min/max hue values for each bucket
 
 #### 5. Hue and Saturation Application
 **Implemented in**: `imageProcessingWorker.js` (applyHueAndSaturation function)
-- **Input**: Luminance-adjusted HSL image, Luminance-mapped image, hue palette
+- **Input**: Luminance-adjusted HSL image, Luminance-mapped image, hue palette, grayscaleThreshold, hueThreshold
 - **Process**:
   - For each pixel in the Luminance-adjusted HSL image:
-    - Find the cluster where the pixel's hue falls within the cluster's min-max hue range
-    - Apply the hue and saturation of the mapped color while preserving the luminance value
-    - if no such cluster exists, use the corresponding pixel from the Luminance-mapped image 
+    - Find the closest hue in the palette
+    - If the pixel meets both criteria:
+      1. Not grayscale (using grayscaleThreshold)
+      2. Close to a palette hue (within hueThreshold)
+      - Apply the hue and saturation from the palette color while preserving luminance
+    - Otherwise, use the corresponding pixel from the Luminance-mapped image
 - **Output**: Final HSL image with applied hue and saturation
 
 #### 6. Output Generation

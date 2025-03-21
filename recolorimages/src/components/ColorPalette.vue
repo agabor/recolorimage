@@ -44,16 +44,10 @@ watch(() => props.selectedPalette.name, (newValue) => {
   }
 });
 
-const luminanceGradient = computed(() => {
-  const colors = props.selectedPalette.luminance;
-  if (colors.length < 2) return 'linear-gradient(to right, #000, #fff)';
-  
-  const stops = colors.map((color, index) => {
-    const percent = (index / (colors.length - 1)) * 100;
-    return `${color.hex()} ${percent}%`;
-  });
-  
-  return `linear-gradient(to right, ${stops.join(', ')})`;
+const luminanceColors = computed(() => {
+  return [...props.selectedPalette.luminance]
+    .sort((a, b) => a.luminance() - b.luminance())
+    .map(color => color.hex());
 });
 
 const addLuminanceColor = () => {
@@ -124,7 +118,14 @@ const getMatchPercentage = (index) => {
     <div v-if="!isCustomizing" class="palette-preview">
       <div class="palette-section">
         <h3>Luminance Palette</h3>
-        <div class="luminance-gradient" :style="{ background: luminanceGradient }"></div>
+        <div class="luminance-swatches">
+          <div 
+            v-for="(color, index) in luminanceColors" 
+            :key="index"
+            class="color-swatch luminance-swatch"
+            :style="{ backgroundColor: color }"
+          ></div>
+        </div>
       </div>
       
       <div class="palette-section">
@@ -269,7 +270,14 @@ const getMatchPercentage = (index) => {
   color: #666;
 }
 
-.luminance-gradient {
+.luminance-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.luminance-swatch {
+  width: 40px;
   height: 40px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);

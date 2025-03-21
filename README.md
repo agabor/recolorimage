@@ -25,9 +25,9 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 ### 2. Color Palette Components
 **Implemented in**: `recolorimages/src/components/ColorPalette.vue`
 - **Luminance Palette**:
-  - Displayed as a continuous gradient from dark to light
-  - Minimum of 2 colors, ordered by luminance value
-  - Colors between explicit points are linearly interpolated
+  - Displayed as individual color swatches ordered by luminance (dark to light)
+  - Minimum of 2 colors
+  - Each color swatch represents a distinct luminance level in the palette
   
 - **Hue Palette**:
   - Displayed as individual color swatches

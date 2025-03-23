@@ -80,26 +80,6 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 - **Output**: Boolean (true if hue is close to a palette hue)
 - **Implementation**: Return true if hueDistance < threshold
 
-#### 5. slDistance(hslColor, huePalette)
-- **Input**: HSL color value [h, s, l], hue palette
-- **Output**: Minimum Euclidean distance between [s,l] and any palette color's [s,l]
-- **Implementation**: Calculate minimum distance between saturation-lightness pairs
-
-#### 6. isSlOnPalette(hslColor, huePalette, threshold)
-- **Input**: HSL color value [h, s, l], hue palette, threshold value
-- **Output**: Boolean (true if [s,l] is close to a palette color's [s,l])
-- **Implementation**: Return true if slDistance < threshold
-
-#### 7. isHueMappable(hslColor, huePalette)
-- **Input**: HSL color value [h, s, l], hue palette
-- **Output**: Boolean (true if color can be mapped to hue palette)
-- **Implementation**: Return !isGrayScale(hslColor) && isHueOnPalette(hslColor, huePalette) && isSlOnPalette(hslColor, huePalette)
-
-#### 8. blendFactor(hslColor, huePalette)
-- **Input**: HSL color value [h, s, l], hue palette
-- **Output**: Value between 0 and 1 determining blend ratio
-- **Implementation**: Calculate weighted combination of grayScaleDistance, hueDistance, and slDistance
-
 ### Processing Pipeline
 **Implemented in**: 
 - `recolorimages/src/composables/useImageProcessing.js` (main processing logic)
@@ -183,8 +163,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
    - Handle browser compatibility issues
 
 3. **Default Values**:
-   - Grayscale threshold: 0.1
-   - Hue distance threshold: 15 (in degrees)
-   - SL distance threshold: 0.2
+   - Grayscale threshold: 0.3
+   - Hue distance threshold: 60 (in degrees)
    - Outlier percentage: 5%
    - Default color count: 8

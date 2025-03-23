@@ -126,28 +126,6 @@ export function isHueMappable(hslColor, huePalette) {
 }
 
 /**
- * Calculate a blend factor determining the blend ratio
- * @param {Array} hslColor - HSL color value [h, s, l]
- * @param {Array} huePalette - Array of hue palette colors
- * @returns {Number} - Value between 0 and 1 determining blend ratio
- */
-export function blendFactor(hslColor, huePalette) {
-  const rgbColor = chroma.hsl(...hslColor).rgb();
-  
-  // Calculate normalized distances
-  const grayDist = grayScaleDistance(rgbColor) / 255;
-  const hueDist = hueDistance(hslColor, huePalette) / 180;
-  const slDist = slDistance(hslColor, huePalette);
-  
-  // Weighted combination of distances
-  // Higher weight for grayscale distance (more important)
-  const weightedDist = 0.5 * grayDist + 0.3 * (1 - hueDist) + 0.2 * (1 - slDist);
-  
-  // Ensure result is between 0 and 1
-  return Math.max(0, Math.min(1, weightedDist));
-}
-
-/**
  * Convert RGB to HSL
  * @param {Array} rgb - RGB color value [r, g, b]
  * @returns {Array} - HSL color value [h, s, l]

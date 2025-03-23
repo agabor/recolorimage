@@ -22,11 +22,12 @@ self.onmessage = function(e) {
   
   try {
     switch (type) {
-      case 'processImage':
+      case 'processImage': {
         // Convert the array back to a Uint8ClampedArray for processing
         const typedPixelData = new Uint8ClampedArray(pixelData);
         processImage(typedPixelData, width, height, luminancePalette, huePalette, settings);
         break;
+      }
       default:
         self.postMessage({ error: `Unknown command: ${type}` });
     }
@@ -81,33 +82,21 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   
   // Calculate the percentage of pixels matched for each palette color
   const matchedPaletteStats = [];
-  const totalMappablePixels = hslArray.filter(pixel => 
-    colorUtils.isHueMappable(pixel.hsl, huePalette)
-  ).length;
+  const totalMappablePixels = selectedBucketIndices.reduce((sum, bucketIndex) => 
+    sum + paletteBuckets[bucketIndex].length, 0
+  );
   
   if (mappings.length > 0 && totalMappablePixels > 0) {
-    // Create an array to store the count of pixels for each palette index
-    const pixelCountByPaletteIndex = Array(huePalette.length).fill(0);
-    
-    // Count pixels for each palette index
+    // Calculate percentages and create stats objects for each selected bucket
     selectedBucketIndices.forEach(bucketIndex => {
-      const pixelsInBucket = paletteBuckets[bucketIndex].length;
-      pixelCountByPaletteIndex[bucketIndex] = pixelsInBucket;
-    });
-    
-    // Calculate percentages and create stats objects
-    for (let i = 0; i < huePalette.length; i++) {
-      const pixelCount = pixelCountByPaletteIndex[i];
-      const percentage = totalMappablePixels > 0 ? 
-        Math.round((pixelCount / totalMappablePixels) * 100) : 0;
+      const pixelCount = paletteBuckets[bucketIndex].length;
+      const percentage = Math.round((pixelCount / totalMappablePixels) * 100);
       
-      if (pixelCount > 0) {
-        matchedPaletteStats.push({
-          index: i,
-          percentage: percentage
-        });
-      }
-    }
+      matchedPaletteStats.push({
+        index: bucketIndex,
+        percentage: percentage
+      });
+    });
   }
   
   self.postMessage({ 

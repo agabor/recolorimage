@@ -78,54 +78,6 @@ export function isHueOnPalette(hslColor, huePalette, threshold = 60) {
 }
 
 /**
- * Calculate the minimum Euclidean distance between [s,l] and any palette color's [s,l]
- * @param {Array} hslColor - HSL color value [h, s, l]
- * @param {Array} huePalette - Array of hue palette colors
- * @returns {Number} - Minimum distance between saturation-lightness pairs
- */
-export function slDistance(hslColor, huePalette) {
-  const s = hslColor[1];
-  const l = hslColor[2];
-  
-  // Find minimum distance to any palette color's saturation and lightness
-  return Math.min(...huePalette.map(paletteColor => {
-    const paletteHsl = chroma(paletteColor).get('hsl');
-    const paletteS = paletteHsl[1] || 0;
-    const paletteL = paletteHsl[2] || 0;
-    
-    // Calculate Euclidean distance in the SL plane
-    return Math.sqrt(
-      Math.pow(s - paletteS, 2) +
-      Math.pow(l - paletteL, 2)
-    );
-  }));
-}
-
-/**
- * Determine if [s,l] is close to a palette color's [s,l]
- * @param {Array} hslColor - HSL color value [h, s, l]
- * @param {Array} huePalette - Array of hue palette colors
- * @param {Number} threshold - Threshold value (default: 0.2)
- * @returns {Boolean} - True if [s,l] is close to a palette color's [s,l]
- */
-export function isSlOnPalette(hslColor, huePalette, threshold = 0.4) {
-  return slDistance(hslColor, huePalette) < threshold;
-}
-
-/**
- * Determine if a color can be mapped to the hue palette
- * @param {Array} hslColor - HSL color value [h, s, l]
- * @param {Array} huePalette - Array of hue palette colors
- * @returns {Boolean} - True if color can be mapped to hue palette
- */
-export function isHueMappable(hslColor, huePalette) {
-  const rgbColor = chroma.hsl(...hslColor).rgb();
-  return !isGrayScale(rgbColor) && 
-         isHueOnPalette(hslColor, huePalette) && 
-         isSlOnPalette(hslColor, huePalette);
-}
-
-/**
  * Convert RGB to HSL
  * @param {Array} rgb - RGB color value [r, g, b]
  * @returns {Array} - HSL color value [h, s, l]

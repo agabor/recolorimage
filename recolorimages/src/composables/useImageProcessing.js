@@ -23,7 +23,6 @@ export function useImageProcessing() {
   const settings = reactive({
     grayscaleThreshold: 30,
     hueThreshold: 60,
-    slDistanceThreshold: 0.2,
     outlierPercentage: 5
   });
   
@@ -253,7 +252,6 @@ const selectedPalette = reactive({
         const settingsClone = {
           grayscaleThreshold: settings.grayscaleThreshold,
           hueThreshold: settings.hueThreshold,
-          slDistanceThreshold: settings.slDistanceThreshold,
           outlierPercentage: settings.outlierPercentage
         };
         

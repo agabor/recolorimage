@@ -94,7 +94,7 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   if (selectedBucketIndices.length > 0) {
     // Calculate percentages for each color bucket
     selectedBucketIndices.forEach(bucketIndex => {
-      const pixelCount = paletteBuckets[bucketIndex].length;
+      const pixelCount = paletteBuckets[bucketIndex];
       const percentage = Math.round((pixelCount / totalPixels) * 100);
       
       matchedPaletteStats.push({
@@ -250,8 +250,8 @@ function mapLuminance(hslArray, luminancePalette) {
  * Process hues and apply colors in a single pass
  */
 function processHuesAndApplyColors(luminanceAdjustedArray, luminanceMappedArray, huePalette, settings) {
-  // Create a bucket for each hue palette color
-  const paletteBuckets = Array(huePalette.length).fill().map(() => []);
+  // Create a counter for each hue palette color
+  const paletteBuckets = new Array(huePalette.length).fill(0);
   const processedArray = new Array(luminanceAdjustedArray.length);
   
   // Process each pixel
@@ -262,40 +262,45 @@ function processHuesAndApplyColors(luminanceAdjustedArray, luminanceMappedArray,
     // Convert to RGB to check grayscale
     const rgbColor = chroma.hsl(...pixel.hsl).rgb();
     
-    // Find the closest hue in the palette
-    const { color: closestColor, index: closestPaletteIndex } = colorUtils.findClosestHueColor(h, huePalette);
-    const closestHsl = chroma(closestColor).hsl();
-    const hueDistance = colorUtils.hueDistance(pixel.hsl, [closestColor]);
-    
-    // Check if the color should be mapped based on thresholds
-    if (!colorUtils.isGrayScale(rgbColor, settings.grayscaleThreshold) && 
-        hueDistance < settings.hueThreshold) {
-      // Add pixel to appropriate bucket for statistics
-      paletteBuckets[closestPaletteIndex].push(pixel);
+    // First check if the pixel is grayscale
+    if (!colorUtils.isGrayScale(rgbColor, settings.grayscaleThreshold)) {
+      // Only find closest hue for non-grayscale pixels
+      const { color: closestColor, index: closestPaletteIndex } = colorUtils.findClosestHueColor(h, huePalette);
+      const closestHsl = chroma(closestColor).hsl();
+      const hueDistance = colorUtils.hueDistance(pixel.hsl, [closestColor]);
       
-      // Get mapped hue and saturation from closest palette color
-      const mappedHue = closestHsl[0];
-      const mappedSaturation = closestHsl[1];
-      
-      // Use the luminance value from the luminance-mapped pixel
-      const luminanceValue = luminanceMappedPixel.hsl[2];
-      
-      processedArray[index] = {
-        ...pixel,
-        hsl: [mappedHue, mappedSaturation, luminanceValue]
-      };
+      // Check if the hue is close enough to a palette color
+      if (hueDistance < settings.hueThreshold) {
+        // Increment counter for statistics
+        paletteBuckets[closestPaletteIndex]++;
+        
+        // Get mapped hue and saturation from closest palette color
+        const mappedHue = closestHsl[0];
+        const mappedSaturation = closestHsl[1];
+        
+        // Use the luminance value from the luminance-mapped pixel
+        const luminanceValue = luminanceMappedPixel.hsl[2];
+        
+        processedArray[index] = {
+          ...pixel,
+          hsl: [mappedHue, mappedSaturation, luminanceValue]
+        };
+      } else {
+        // If hue is not close enough, use luminance-mapped color
+        processedArray[index] = luminanceMappedPixel;
+      }
     } else {
-      // If color doesn't meet threshold criteria, use luminance-mapped color
+      // For grayscale pixels, use luminance-mapped color directly
       processedArray[index] = luminanceMappedPixel;
     }
   });
   
   // Sort buckets by number of pixels (descending) for statistics
   const bucketIndices = Array.from({ length: huePalette.length }, (_, i) => i);
-  bucketIndices.sort((a, b) => paletteBuckets[b].length - paletteBuckets[a].length);
+  bucketIndices.sort((a, b) => paletteBuckets[b] - paletteBuckets[a]);
   
   // Take only the non-empty buckets
-  const selectedBucketIndices = bucketIndices.filter(index => paletteBuckets[index].length > 0);
+  const selectedBucketIndices = bucketIndices.filter(index => paletteBuckets[index] > 0);
   
   return { processedArray, paletteBuckets, selectedBucketIndices };
 }

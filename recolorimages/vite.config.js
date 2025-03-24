@@ -18,12 +18,15 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
+      input: fileURLToPath(new URL('./index.html', import.meta.url)),
       output: {
+        format: 'iife',
         entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name].[ext]'
       }
     },
+    target: 'es2015',
     minify: 'terser',
     terserOptions: {
       compress: {

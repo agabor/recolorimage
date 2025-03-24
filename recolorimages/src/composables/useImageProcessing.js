@@ -7,8 +7,9 @@ import chroma from 'chroma-js';
 import * as colorUtils from '../utils/colorUtils';
 
 // Create a new worker
-const createWorker = () => {
-  return new Worker(new URL('../workers/imageProcessingWorker.js', import.meta.url), { type: 'module' });
+const createWorker = async () => {
+  const workerUrl = new URL('../workers/imageProcessingWorker.js', import.meta.url);
+  return new Worker(workerUrl, { type: 'module' });
 };
 
 export function useImageProcessing() {
@@ -126,9 +127,9 @@ const selectedPalette = reactive({
   let worker = null;
   
   // Create a worker instance when needed
-  const getWorker = () => {
+  const getWorker = async () => {
     if (!worker) {
-      worker = createWorker();
+      worker = await createWorker();
     }
     return worker;
   };
@@ -171,25 +172,23 @@ const selectedPalette = reactive({
    * @returns {Promise} - Promise that resolves when processing is complete
    */
   const processImage = () => {
+    if (!originalImage.value) {
+      error.value = 'No image loaded';
+      return Promise.reject(new Error('No image loaded'));
+    }
+
+    error.value = null;
+    isProcessing.value = true;
+
+    const { canvas, width, height } = originalImage.value;
+    const pixelData = getPixelData(canvas);
+
     return new Promise((resolve, reject) => {
-      if (!originalImage.value) {
-        error.value = 'No image loaded';
-        reject(new Error('No image loaded'));
-        return;
-      }
-      
-      try {
-        error.value = null;
-        isProcessing.value = true;
+      getWorker()
+        .then(workerInstance => {
         
-        const { canvas, width, height } = originalImage.value;
-        const pixelData = getPixelData(canvas);
-        
-        // Get or create worker
-        const workerInstance = getWorker();
-        
-        // Set up message handler
-        workerInstance.onmessage = (e) => {
+          // Set up message handler
+          workerInstance.onmessage = (e) => {
           const { error: workerError, ...imageData } = e.data;
           
           if (workerError) {
@@ -223,53 +222,53 @@ const selectedPalette = reactive({
           }
         };
         
-        // Handle worker errors
-        workerInstance.onerror = (err) => {
-          error.value = `Worker error: ${err.message}`;
+          // Handle worker errors
+          workerInstance.onerror = (err) => {
+            error.value = `Worker error: ${err.message}`;
+            isProcessing.value = false;
+            reject(err);
+          };
+
+          // Send data to worker
+          // Note: We need to ensure all data is cloneable
+          // Convert ImageData to a plain array to avoid cloning issues
+          const pixelDataArray = Array.from(pixelData.data);
+
+          // Convert chroma.Color objects to hex strings for cloning
+          const luminancePaletteClone = selectedPalette.luminance.map(color => color.hex());
+
+          // Filter out disabled hue colors and keep track of original indices
+          const enabledHuesWithIndices = selectedPalette.hue
+            .map((color, index) => ({ color, originalIndex: index }))
+            .filter(item => !selectedPalette.disabledHues.includes(item.originalIndex));
+
+          // Create a map from worker indices to original palette indices
+          const workerToOriginalIndices = enabledHuesWithIndices.map(item => item.originalIndex);
+
+          const huePaletteClone = enabledHuesWithIndices.map(item => item.color.hex());
+
+          // Create a plain object with the settings
+          const settingsClone = {
+            grayscaleThreshold: settings.grayscaleThreshold,
+            hueThreshold: settings.hueThreshold,
+            outlierPercentage: settings.outlierPercentage
+          };
+
+          workerInstance.postMessage({
+            type: 'processImage',
+            pixelData: pixelDataArray,
+            width,
+            height,
+            luminancePalette: luminancePaletteClone,
+            huePalette: huePaletteClone,
+            settings: settingsClone
+          });
+        })
+        .catch(err => {
+          error.value = `Processing failed: ${err.message}`;
           isProcessing.value = false;
           reject(err);
-        };
-        
-        // Send data to worker
-        // Note: We need to ensure all data is cloneable
-        // Convert ImageData to a plain array to avoid cloning issues
-        const pixelDataArray = Array.from(pixelData.data);
-        
-        // Convert chroma.Color objects to hex strings for cloning
-        const luminancePaletteClone = selectedPalette.luminance.map(color => color.hex());
-        
-        // Filter out disabled hue colors and keep track of original indices
-        const enabledHuesWithIndices = selectedPalette.hue
-          .map((color, index) => ({ color, originalIndex: index }))
-          .filter(item => !selectedPalette.disabledHues.includes(item.originalIndex));
-        
-        // Create a map from worker indices to original palette indices
-        const workerToOriginalIndices = enabledHuesWithIndices.map(item => item.originalIndex);
-        
-        const huePaletteClone = enabledHuesWithIndices.map(item => item.color.hex());
-        
-        // Create a plain object with the settings
-        const settingsClone = {
-          grayscaleThreshold: settings.grayscaleThreshold,
-          hueThreshold: settings.hueThreshold,
-          outlierPercentage: settings.outlierPercentage
-        };
-        
-        workerInstance.postMessage({
-          type: 'processImage',
-          pixelData: pixelDataArray,
-          width,
-          height,
-          luminancePalette: luminancePaletteClone,
-          huePalette: huePaletteClone,
-          settings: settingsClone
         });
-        
-      } catch (err) {
-        error.value = `Processing failed: ${err.message}`;
-        isProcessing.value = false;
-        reject(err);
-      }
     });
   };
   

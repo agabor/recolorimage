@@ -48,6 +48,9 @@ class RecolorImages {
         if ($this->shortcode_used) {
             wp_enqueue_script('recolor-images');
             wp_enqueue_style('recolor-images');
+            
+            // Add plugin base URL to window object
+            wp_add_inline_script('recolor-images', 'window.recolorImagesPlugin = { baseUrl: "' . plugin_dir_url(__FILE__) . 'dist" };', 'before');
         }
     }
 

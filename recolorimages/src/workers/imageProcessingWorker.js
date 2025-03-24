@@ -71,29 +71,19 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   );
   console.timeEnd('Luminance Mapping');
   
-  // Step 4: Hue Clustering
-  console.time('Hue Clustering');
-  const { mappings, paletteBuckets, selectedBucketIndices } = clusterHues(
-    luminanceAdjustedArray,
-    huePalette,
-    settings
-  );
-  console.timeEnd('Hue Clustering');
-  
-  // Step 5: Hue and Saturation Application
-  console.time('Hue and Saturation Application');
-  const finalArray = applyHueAndSaturation(
+  // Step 4: Combined Hue Processing and Color Application
+  console.time('Hue Processing and Color Application');
+  const { processedArray, paletteBuckets, selectedBucketIndices } = processHuesAndApplyColors(
     luminanceAdjustedArray,
     luminanceMappedArray,
-    mappings,
     huePalette,
     settings
   );
-  console.timeEnd('Hue and Saturation Application');
+  console.timeEnd('Hue Processing and Color Application');
   
   // Step 6: Output Generation
   console.time('Output Generation');
-  const processedImageData = hslArrayToImageData(finalArray, width, height);
+  const processedImageData = hslArrayToImageData(processedArray, width, height);
   console.timeEnd('Output Generation');
   
   // Calculate statistics
@@ -101,7 +91,7 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   const matchedPaletteStats = [];
   const totalPixels = width * height;
  
-  if (mappings.length > 0) {
+  if (selectedBucketIndices.length > 0) {
     // Calculate percentages for each color bucket
     selectedBucketIndices.forEach(bucketIndex => {
       const pixelCount = paletteBuckets[bucketIndex].length;
@@ -257,85 +247,15 @@ function mapLuminance(hslArray, luminancePalette) {
 }
 
 /**
- * Bucket hues and create mappings
+ * Process hues and apply colors in a single pass
  */
-function clusterHues(hslArray, huePalette, settings) {
-  // Filter pixels that are mappable to hue palette
-  const mappablePixels = hslArray.filter(pixel => {
-    const rgbColor = chroma.hsl(...pixel.hsl).rgb();
-    return !colorUtils.isGrayScale(rgbColor, settings.grayscaleThreshold) && 
-           colorUtils.isHueOnPalette(pixel.hsl, huePalette, settings.hueThreshold); 
-  });
-  
-  // If no mappable pixels, return empty array
-  if (mappablePixels.length === 0) {
-    return { mappings: [], paletteBuckets: [], selectedBucketIndices: [] };
-  }
-  
+function processHuesAndApplyColors(luminanceAdjustedArray, luminanceMappedArray, huePalette, settings) {
   // Create a bucket for each hue palette color
   const paletteBuckets = Array(huePalette.length).fill().map(() => []);
+  const processedArray = new Array(luminanceAdjustedArray.length);
   
-  // Assign each pixel to the bucket with the closest hue color
-  mappablePixels.forEach(pixel => {
-    const hue = pixel.hsl[0];
-    const { index: closestPaletteIndex } = colorUtils.findClosestHueColor(hue, huePalette);
-    paletteBuckets[closestPaletteIndex].push(pixel);
-  });
-  
-  // Sort buckets by number of pixels (descending)
-  const bucketIndices = Array.from({ length: huePalette.length }, (_, i) => i);
-  bucketIndices.sort((a, b) => paletteBuckets[b].length - paletteBuckets[a].length);
-  
-  // Take only the top colorCount buckets (or fewer if there aren't enough non-empty buckets)
-  const selectedBucketIndices = bucketIndices
-    .filter(index => paletteBuckets[index].length > 0);
-  
-  // Create mappings as arrays of key-value pairs
-  const hueMapping = [];
-  
-  // Process each selected bucket
-  for (const bucketIndex of selectedBucketIndices) {
-    const pixelsInBucket = paletteBuckets[bucketIndex];
-    
-    if (pixelsInBucket.length === 0) continue;
-    
-    // Calculate average hue in the bucket
-    const huesInBucket = pixelsInBucket.map(pixel => pixel.hsl[0]);
-    const avgHue = huesInBucket.reduce((sum, hue) => sum + hue, 0) / huesInBucket.length;
-    
-    // Find the lowest and highest hue values in this bucket
-    let minHue = 1000;
-    let maxHue = -1000;
-    for (let hue of huesInBucket) {
-      if (hue < minHue) {
-        minHue = hue;
-      }
-      if (hue > maxHue) {
-        maxHue = hue;
-      }
-    }
-    
-    // Get the palette color for this bucket
-    const mappedColor = huePalette[bucketIndex];
-    
-    // Store mappings as key-value pairs in arrays
-    // Include the min and max hue values along with the average hue and mapped color
-    hueMapping.push([avgHue, mappedColor, minHue, maxHue]);
-  }
-  
-  return { mappings: hueMapping, paletteBuckets, selectedBucketIndices };
-}
-
-/**
- * Apply hue and saturation of mapped colors to the luminance-mapped image
- */
-function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hueMapping, huePalette, settings) {
-  // If no mappings, return luminance-mapped array
-  if (hueMapping.length === 0) {
-    return luminanceMappedArray;
-  }
-  
-  return luminanceAdjustedArray.map((pixel, index) => {
+  // Process each pixel
+  luminanceAdjustedArray.forEach((pixel, index) => {
     const [h] = pixel.hsl;
     const luminanceMappedPixel = luminanceMappedArray[index];
     
@@ -343,13 +263,16 @@ function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hue
     const rgbColor = chroma.hsl(...pixel.hsl).rgb();
     
     // Find the closest hue in the palette
-    const { color: closestColor } = colorUtils.findClosestHueColor(h, huePalette);
+    const { color: closestColor, index: closestPaletteIndex } = colorUtils.findClosestHueColor(h, huePalette);
     const closestHsl = chroma(closestColor).hsl();
     const hueDistance = colorUtils.hueDistance(pixel.hsl, [closestColor]);
     
     // Check if the color should be mapped based on thresholds
     if (!colorUtils.isGrayScale(rgbColor, settings.grayscaleThreshold) && 
         hueDistance < settings.hueThreshold) {
+      // Add pixel to appropriate bucket for statistics
+      paletteBuckets[closestPaletteIndex].push(pixel);
+      
       // Get mapped hue and saturation from closest palette color
       const mappedHue = closestHsl[0];
       const mappedSaturation = closestHsl[1];
@@ -357,13 +280,22 @@ function applyHueAndSaturation(luminanceAdjustedArray, luminanceMappedArray, hue
       // Use the luminance value from the luminance-mapped pixel
       const luminanceValue = luminanceMappedPixel.hsl[2];
       
-      return {
+      processedArray[index] = {
         ...pixel,
         hsl: [mappedHue, mappedSaturation, luminanceValue]
       };
+    } else {
+      // If color doesn't meet threshold criteria, use luminance-mapped color
+      processedArray[index] = luminanceMappedPixel;
     }
-    
-    // If color doesn't meet threshold criteria, use luminance-mapped color
-    return luminanceMappedPixel;
   });
+  
+  // Sort buckets by number of pixels (descending) for statistics
+  const bucketIndices = Array.from({ length: huePalette.length }, (_, i) => i);
+  bucketIndices.sort((a, b) => paletteBuckets[b].length - paletteBuckets[a].length);
+  
+  // Take only the non-empty buckets
+  const selectedBucketIndices = bucketIndices.filter(index => paletteBuckets[index].length > 0);
+  
+  return { processedArray, paletteBuckets, selectedBucketIndices };
 }

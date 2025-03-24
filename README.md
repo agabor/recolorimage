@@ -103,36 +103,31 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
   - If input range < palette range: shift input range to fit within palette range (no scaling up)
 - **Output**: Luminance-adjusted HSL image
 
-#### 3. Luminance Mapping
-**Implemented in**: `imageProcessingWorker.js` (mapLuminance function)
-- **Input**: Luminance-adjusted HSL image, luminance palette
+#### 3. Color Mapping and Processing
+**Implemented in**: `imageProcessingWorker.js` (mapLuminanceAndProcessColors function)
+- **Input**: Luminance-adjusted HSL image, luminance palette, hue palette, grayscaleThreshold, hueThreshold
 - **Process**:
+  - Initialize counters for palette color usage statistics
   - For each pixel:
-    - Extract lightness (L) value
-    - Find corresponding color on luminance palette using linear interpolation
-    - Replace pixel with palette color
-- **Output**: Luminance-mapped image
-
-#### 4. Hue Processing and Color Application
-**Implemented in**: `imageProcessingWorker.js` (processHuesAndApplyColors function)
-- **Input**: Luminance-adjusted HSL image, Luminance-mapped image, hue palette, grayscaleThreshold, hueThreshold
-- **Process**:
-  - Initialize counters for each hue palette color (for statistics)
-  - For each pixel in the Luminance-adjusted HSL image:
-    1. Check if pixel is grayscale (optimization: skip hue processing for grayscale pixels)
-    2. If not grayscale:
-       - Find closest hue in the palette
-       - If hue is close enough (within hueThreshold):
-         - Increment counter for statistics
-         - Apply hue and saturation from palette color while preserving luminance
-       - Otherwise, use luminance-mapped color
-    3. If grayscale, use luminance-mapped color directly
+    1. Check if pixel is grayscale
+    2. Process based on grayscale status:
+       - If grayscale:
+         - Find corresponding luminance palette color
+         - Apply it directly
+       - If not grayscale:
+         - Find closest hue in the palette
+         - If hue is within threshold:
+           - Apply hue and saturation from palette color
+           - Preserve adjusted luminance
+           - Update color usage statistics
+         - Otherwise: find and use corresponding luminance palette color
+    3. Track color usage for statistics
   - Sort and filter counters to identify most-used palette colors
 - **Output**: 
   - Final HSL image with applied colors
   - Statistics about palette color usage
 
-#### 5. Output Generation
+#### 4. Output Generation
 **Implemented in**: `imageProcessingWorker.js` (hslArrayToImageData) and `useImageProcessing.js` (getProcessedImageUrl, downloadProcessedImage)
 - **Input**: Blended HSL image
 - **Process**:
@@ -145,7 +140,7 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
 1. **Performance Considerations**:
    - Use HTML5 Canvas API for efficient image processing
    - Implement progress tracking for each processing step
-   - Use Web Workers for CPU-intensive image processing to prevent UI freezing
+   - Use Web Workers for CPU-intensive image processing (mapLuminanceAndProcessColors) to prevent UI freezing
 
 2. **Error Handling**:
    - Validate image dimensions and file size before processing

@@ -63,23 +63,15 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   );
   console.timeEnd('Luminance Range Adjustment');
   
-  // Step 3: Luminance Mapping
-  console.time('Luminance Mapping');
-  const luminanceMappedArray = mapLuminance(
-    luminanceAdjustedArray,
-    luminancePalette
-  );
-  console.timeEnd('Luminance Mapping');
-  
-  // Step 4: Combined Hue Processing and Color Application
-  console.time('Hue Processing and Color Application');
+  // Step 3: Combined Color Mapping and Processing
+  console.time('Color Mapping and Processing');
   const { processedArray, paletteBuckets, selectedBucketIndices } = processHuesAndApplyColors(
     luminanceAdjustedArray,
-    luminanceMappedArray,
+    luminancePalette,
     huePalette,
     settings
   );
-  console.timeEnd('Hue Processing and Color Application');
+  console.timeEnd('Color Mapping and Processing');
   
   // Step 6: Output Generation
   console.time('Output Generation');
@@ -229,35 +221,16 @@ function adjustLuminanceRange(hslArray, luminancePalette, outlierPercentage) {
 }
 
 /**
- * Map pixels to luminance palette
- */
-function mapLuminance(hslArray, luminancePalette) {
-  return hslArray.map(pixel => {
-    const [, , l] = pixel.hsl;
-    
-    // Find corresponding color on luminance palette
-    const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
-    const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
-    
-    return {
-      ...pixel,
-      hsl: mappedHsl
-    };
-  });
-}
-
-/**
  * Process hues and apply colors in a single pass
  */
-function processHuesAndApplyColors(luminanceAdjustedArray, luminanceMappedArray, huePalette, settings) {
+function processHuesAndApplyColors(luminanceAdjustedArray, luminancePalette, huePalette, settings) {
   // Create a counter for each hue palette color
   const paletteBuckets = new Array(huePalette.length).fill(0);
   const processedArray = new Array(luminanceAdjustedArray.length);
   
   // Process each pixel
   luminanceAdjustedArray.forEach((pixel, index) => {
-    const [h] = pixel.hsl;
-    const luminanceMappedPixel = luminanceMappedArray[index];
+    const [h, s, l] = pixel.hsl;
     
     // Convert to RGB to check grayscale
     const rgbColor = chroma.hsl(...pixel.hsl).rgb();
@@ -278,20 +251,28 @@ function processHuesAndApplyColors(luminanceAdjustedArray, luminanceMappedArray,
         const mappedHue = closestHsl[0];
         const mappedSaturation = closestHsl[1];
         
-        // Use the luminance value from the luminance-mapped pixel
-        const luminanceValue = luminanceMappedPixel.hsl[2];
-        
+        // Keep the adjusted luminance
         processedArray[index] = {
           ...pixel,
-          hsl: [mappedHue, mappedSaturation, luminanceValue]
+          hsl: [mappedHue, mappedSaturation, l]
         };
       } else {
-        // If hue is not close enough, use luminance-mapped color
-        processedArray[index] = luminanceMappedPixel;
+        // If hue is not close enough, find corresponding luminance palette color
+        const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
+        const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
+        processedArray[index] = {
+          ...pixel,
+          hsl: mappedHsl
+        };
       }
     } else {
-      // For grayscale pixels, use luminance-mapped color directly
-      processedArray[index] = luminanceMappedPixel;
+      // For grayscale pixels, find corresponding luminance palette color
+      const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
+      const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
+      processedArray[index] = {
+        ...pixel,
+        hsl: mappedHsl
+      };
     }
   });
   

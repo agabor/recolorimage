@@ -17,6 +17,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    cssCodeSplit: false,
     rollupOptions: {
       input: fileURLToPath(new URL('./index.html', import.meta.url)),
       output: {
@@ -25,6 +26,10 @@ export default defineConfig({
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name].[ext]'
       }
+    },
+    css: {
+      devSourcemap: true,
+      extract: true
     },
     target: 'es2015',
     minify: 'terser',

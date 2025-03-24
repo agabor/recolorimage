@@ -38,7 +38,7 @@ class RecolorImages {
         
         wp_register_style(
             'recolor-images',
-            plugin_dir_url(__FILE__) . 'dist/assets/index.css',
+            plugin_dir_url(__FILE__) . 'dist/assets/style.css',
             array(),
             '1.0.0'
         );

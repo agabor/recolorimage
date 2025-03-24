@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+const selectedFile = ref(null);
+const imageUrl = ref(null);
+
 const props = defineProps({
   isProcessing: {
     type: Boolean,
@@ -56,7 +59,17 @@ const handleFiles = (files) => {
     return;
   }
   
+  selectedFile.value = file;
+  imageUrl.value = URL.createObjectURL(file);
   emit('file-selected', file);
+};
+
+const clearImage = () => {
+  selectedFile.value = null;
+  if (imageUrl.value) {
+    URL.revokeObjectURL(imageUrl.value);
+    imageUrl.value = null;
+  }
 };
 
 const triggerFileInput = () => {
@@ -92,6 +105,12 @@ const dropzoneClasses = computed(() => {
     <div class="dropzone-content">
       <div v-if="isProcessing" class="processing-overlay">
         <span>Processing...</span>
+      </div>
+      <div v-else-if="imageUrl" class="image-preview">
+        <img :src="imageUrl" alt="Selected image" />
+        <button class="clear-button" @click.stop="clearImage">
+          Clear Image
+        </button>
       </div>
       <div v-else>
         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -176,5 +195,37 @@ const dropzoneClasses = computed(() => {
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 8px;
+}
+
+.image-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.clear-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 16px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.clear-button:hover {
+  background-color: #cc0000;
 }
 </style>

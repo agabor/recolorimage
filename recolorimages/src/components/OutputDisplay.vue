@@ -1,11 +1,7 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
-  originalImageUrl: {
-    type: String,
-    default: null
-  },
   processedImageUrl: {
     type: String,
     default: null
@@ -22,20 +18,6 @@ const props = defineProps({
 
 const emit = defineEmits(['download']);
 
-const activeTab = ref('original');
-
-// Reset to original tab when a new image is loaded
-watch(() => props.originalImageUrl, () => {
-  activeTab.value = 'original';
-});
-
-// Switch to processed tab when processing is complete
-watch(() => props.processedImageUrl, (newUrl) => {
-  if (newUrl) {
-    activeTab.value = 'processed';
-  }
-});
-
 const handleDownload = () => {
   emit('download');
 };
@@ -49,45 +31,13 @@ const imageDimensions = computed(() => {
 
 <template>
   <div class="output-display">
-    <div v-if="originalImageUrl || processedImageUrl" class="image-container">
-      <div class="tabs">
-        <button 
-          class="tab-btn" 
-          :class="{ active: activeTab === 'original' }"
-          @click="activeTab = 'original'"
-          :disabled="!originalImageUrl"
-        >
-          Original
-        </button>
-        
-        <button 
-          class="tab-btn" 
-          :class="{ active: activeTab === 'processed' }"
-          @click="activeTab = 'processed'"
-          :disabled="!processedImageUrl"
-        >
-          Processed
-        </button>
-      </div>
-      
+    <div v-if="processedImageUrl" class="image-container">
       <div class="image-view">
         <img 
-          v-if="activeTab === 'original' && originalImageUrl" 
-          :src="originalImageUrl" 
-          alt="Original Image"
-          class="display-image"
-        />
-        
-        <img 
-          v-else-if="activeTab === 'processed' && processedImageUrl" 
           :src="processedImageUrl" 
           alt="Processed Image"
           class="display-image"
         />
-        
-        <div v-else class="no-image">
-          <p>No image available for this view</p>
-        </div>
       </div>
       
       <div class="image-info">
@@ -127,34 +77,6 @@ const imageDimensions = computed(() => {
   border-radius: 8px;
   overflow: hidden;
   background-color: white;
-}
-
-.tabs {
-  display: flex;
-  border-bottom: 1px solid #ddd;
-  background-color: #f5f5f5;
-  overflow-x: auto;
-}
-
-.tab-btn {
-  padding: 0.75rem 1rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
-.tab-btn.active {
-  border-bottom-color: #4CAF50;
-  color: #4CAF50;
-  font-weight: bold;
-}
-
-.tab-btn:disabled {
-  color: #ccc;
-  cursor: not-allowed;
 }
 
 .image-view {

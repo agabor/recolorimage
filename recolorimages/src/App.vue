@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, watch } from 'vue';
 import ImageUploader from './components/ImageUploader.vue';
 import ColorPalette from './components/ColorPalette.vue';
 import ProcessingControls from './components/ProcessingControls.vue';
@@ -18,7 +18,6 @@ const {
   matchedPaletteStats,
   loadImage,
   processImage,
-  getOriginalImageUrl,
   getProcessedImageUrl,
   downloadProcessedImage,
   setPalette,
@@ -26,8 +25,7 @@ const {
   toggleHueColor
 } = useImageProcessing();
 
-// Image URLs for display
-const originalImageUrl = ref(null);
+// Image URL for display
 const processedImageUrl = ref(null);
 
 // Handle file selection
@@ -65,12 +63,8 @@ const handleDownload = () => {
   downloadProcessedImage('recolored-image.png');
 };
 
-// Update image URLs
+// Update image URL
 const updateImageUrls = () => {
-  if (hasImage.value) {
-    originalImageUrl.value = getOriginalImageUrl();
-  }
-  
   if (hasProcessedImage.value) {
     processedImageUrl.value = getProcessedImageUrl();
   }
@@ -127,7 +121,6 @@ watch(error, (newError) => {
         <section class="section">
           <h2>4. Output</h2>
           <OutputDisplay 
-            :original-image-url="originalImageUrl"
             :processed-image-url="processedImageUrl"
             :image-info="imageInfo"
             :has-processed-image="hasProcessedImage"

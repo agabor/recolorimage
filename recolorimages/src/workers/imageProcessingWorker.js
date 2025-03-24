@@ -41,34 +41,47 @@ self.onmessage = function(e) {
  * Process the image with the provided settings
  */
 function processImage(pixelData, width, height, luminancePalette, huePalette, settings) {
+  console.time('Total Processing Time');
+  
   // Convert hex strings back to chroma.Color objects
+  console.time('Color Object Conversion');
   luminancePalette = luminancePalette.map(hex => chroma(hex));
   huePalette = huePalette.map(hex => chroma(hex));
+  console.timeEnd('Color Object Conversion');
   
   // Step 1: Convert to HSL array
+  console.time('HSL Conversion');
   const hslArray = pixelDataToHslArray(pixelData, width, height);
+  console.timeEnd('HSL Conversion');
   
   // Step 2: Luminance Range Adjustment
+  console.time('Luminance Range Adjustment');
   const luminanceAdjustedArray = adjustLuminanceRange(
     hslArray,
     luminancePalette,
     settings.outlierPercentage
   );
+  console.timeEnd('Luminance Range Adjustment');
   
   // Step 3: Luminance Mapping
+  console.time('Luminance Mapping');
   const luminanceMappedArray = mapLuminance(
     luminanceAdjustedArray,
     luminancePalette
   );
+  console.timeEnd('Luminance Mapping');
   
   // Step 4: Hue Clustering
+  console.time('Hue Clustering');
   const { mappings, paletteBuckets, selectedBucketIndices } = clusterHues(
     luminanceAdjustedArray,
     huePalette,
     settings
   );
+  console.timeEnd('Hue Clustering');
   
   // Step 5: Hue and Saturation Application
+  console.time('Hue and Saturation Application');
   const finalArray = applyHueAndSaturation(
     luminanceAdjustedArray,
     luminanceMappedArray,
@@ -76,18 +89,23 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     huePalette,
     settings
   );
+  console.timeEnd('Hue and Saturation Application');
   
   // Step 6: Output Generation
+  console.time('Output Generation');
   const processedImageData = hslArrayToImageData(finalArray, width, height);
+  console.timeEnd('Output Generation');
   
-  // Calculate the percentage of pixels matched for each palette color
+  // Calculate statistics
+  console.time('Statistics Calculation');
   const matchedPaletteStats = [];
-  
+  const totalPixels = width * height;
+ 
   if (mappings.length > 0) {
-    // Calculate percentages and create stats objects for each selected bucket
+    // Calculate percentages for each color bucket
     selectedBucketIndices.forEach(bucketIndex => {
       const pixelCount = paletteBuckets[bucketIndex].length;
-      const percentage = Math.round((pixelCount / width / height) * 100);
+      const percentage = Math.round((pixelCount / totalPixels) * 100);
       
       matchedPaletteStats.push({
         index: bucketIndex,
@@ -95,6 +113,8 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
       });
     });
   }
+  console.timeEnd('Statistics Calculation');
+  console.timeEnd('Total Processing Time');
   
   self.postMessage({ 
     processedImageData: {

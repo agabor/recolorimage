@@ -122,11 +122,11 @@ export function findClosestLuminanceColor(lightness, luminancePalette) {
   
   // If exact match or at the extremes
   if (lowerIndex === upperIndex || lightness <= paletteLightness[0]) {
-    return chroma(luminancePalette[lowerIndex]).rgb();
+    return chroma(luminancePalette[lowerIndex]).hsl();
   }
   
   if (lightness >= paletteLightness[paletteLightness.length - 1]) {
-    return chroma(luminancePalette[upperIndex]).rgb();
+    return chroma(luminancePalette[upperIndex]).hsl();
   }
   
   // Linear interpolation between the two closest colors
@@ -137,7 +137,7 @@ export function findClosestLuminanceColor(lightness, luminancePalette) {
   const lowerColor = chroma(luminancePalette[lowerIndex]);
   const upperColor = chroma(luminancePalette[upperIndex]);
   
-  return chroma.mix(lowerColor, upperColor, ratio, 'hsl').rgb();
+  return chroma.mix(lowerColor, upperColor, ratio, 'hsl').hsl();
 }
 
 /**

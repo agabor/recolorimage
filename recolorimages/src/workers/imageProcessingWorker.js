@@ -259,8 +259,7 @@ function processHuesAndApplyColors(luminanceAdjustedArray, luminancePalette, hue
         return;
       }
     }
-    const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
-    const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
+    const mappedHsl = colorUtils.findClosestLuminanceColor(l, luminancePalette);
     processedArray[index] = {
       ...pixel,
       hsl: mappedHsl

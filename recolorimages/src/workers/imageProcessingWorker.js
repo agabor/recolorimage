@@ -82,15 +82,12 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
   
   // Calculate the percentage of pixels matched for each palette color
   const matchedPaletteStats = [];
-  const totalMappablePixels = selectedBucketIndices.reduce((sum, bucketIndex) => 
-    sum + paletteBuckets[bucketIndex].length, 0
-  );
   
-  if (mappings.length > 0 && totalMappablePixels > 0) {
+  if (mappings.length > 0) {
     // Calculate percentages and create stats objects for each selected bucket
     selectedBucketIndices.forEach(bucketIndex => {
       const pixelCount = paletteBuckets[bucketIndex].length;
-      const percentage = Math.round((pixelCount / totalMappablePixels) * 100);
+      const percentage = Math.round((pixelCount / width / height) * 100);
       
       matchedPaletteStats.push({
         index: bucketIndex,

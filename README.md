@@ -113,36 +113,26 @@ Implement all processing steps as Vue 3 composables for modularity and reusabili
     - Replace pixel with palette color
 - **Output**: Luminance-mapped image
 
-#### 4. Hue Bucketing
-**Implemented in**: `imageProcessingWorker.js` (clusterHues function)
-- **Input**: Luminance-adjusted HSL image, hue palette, grayscaleThreshold, hueThreshold
-- **Process**:
-  - Filter pixels based on two criteria:
-    1. Not grayscale (using grayscaleThreshold)
-    2. Have a hue close to a palette hue (within hueThreshold)
-  - For each palette color, create a bucket
-  - Assign each mappable pixel to the bucket with the closest hue color
-  - For each non-empty bucket:
-    - Calculate the average hue of pixels in the bucket
-    - Find and store the minimum and maximum hue values in the bucket
-    - Map the bucket to its corresponding palette color
-- **Output**:
-  - Hue mapping: Map from bucket average hues to palette hues, including min/max hue values for each bucket
-
-#### 5. Hue and Saturation Application
-**Implemented in**: `imageProcessingWorker.js` (applyHueAndSaturation function)
+#### 4. Hue Processing and Color Application
+**Implemented in**: `imageProcessingWorker.js` (processHuesAndApplyColors function)
 - **Input**: Luminance-adjusted HSL image, Luminance-mapped image, hue palette, grayscaleThreshold, hueThreshold
 - **Process**:
+  - Initialize counters for each hue palette color (for statistics)
   - For each pixel in the Luminance-adjusted HSL image:
-    - Find the closest hue in the palette
-    - If the pixel meets both criteria:
-      1. Not grayscale (using grayscaleThreshold)
-      2. Close to a palette hue (within hueThreshold)
-      - Apply the hue and saturation from the palette color while preserving luminance
-    - Otherwise, use the corresponding pixel from the Luminance-mapped image
-- **Output**: Final HSL image with applied hue and saturation
+    1. Check if pixel is grayscale (optimization: skip hue processing for grayscale pixels)
+    2. If not grayscale:
+       - Find closest hue in the palette
+       - If hue is close enough (within hueThreshold):
+         - Increment counter for statistics
+         - Apply hue and saturation from palette color while preserving luminance
+       - Otherwise, use luminance-mapped color
+    3. If grayscale, use luminance-mapped color directly
+  - Sort and filter counters to identify most-used palette colors
+- **Output**: 
+  - Final HSL image with applied colors
+  - Statistics about palette color usage
 
-#### 6. Output Generation
+#### 5. Output Generation
 **Implemented in**: `imageProcessingWorker.js` (hslArrayToImageData) and `useImageProcessing.js` (getProcessedImageUrl, downloadProcessedImage)
 - **Input**: Blended HSL image
 - **Process**:

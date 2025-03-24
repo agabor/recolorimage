@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
+		"build:plugin": "vite build && mkdir -p plugin-build/recolor-images && cp -r dist recolor-images.php wordpress-plugin-readme.md plugin-build/recolor-images/ && cd plugin-build && zip -r recolor-images.zip recolor-images && rm -rf recolor-images",
 		"preview": "vite preview",
 		"test:unit": "vitest",
 		"lint": "eslint . --fix",

@@ -126,13 +126,7 @@ watch(error, (newError) => {
 
 <template>
   <div class="app">
-    <header>
-      <h1>Recolor Images</h1>
-      <p>Transform images by mapping their colors to a custom palette</p>
-    </header>
-    
-    <main>
-      <div class="app-container">
+    <div class="app-container">
         <!-- Image Upload -->
         <section class="section">
           <ImageUploader 
@@ -310,55 +304,19 @@ watch(error, (newError) => {
           />
         </section>
       </div>
-    </main>
-    
-    <footer>
-      <p>Built with Vue.js, Canvas API, and Chroma.js</p>
-    </footer>
   </div>
 </template>
 
 <style>
-/* Global styles */
-:root {
-  --primary-color: #4CAF50;
-  --text-color: #333;
-  --background-color: #f8f8f8;
-  --border-color: #ddd;
-}
-
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
-  color: var(--text-color);
-  background-color: var(--background-color);
-}
-
-/* App styles */
 .app {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-header h1 {
-  color: var(--primary-color);
-  margin-bottom: 0.5rem;
-}
-
-header p {
-  color: #666;
+  width: 100%;
+  padding: 1rem;
 }
 
 .app-container {
@@ -368,16 +326,13 @@ header p {
 }
 
 .section {
-  background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
 }
 
 .section h3 {
-  font-size: 1.1rem;
   margin-bottom: 1rem;
-  color: var(--primary-color);
 }
 
 .palette-selector {
@@ -390,7 +345,6 @@ header p {
   padding: 0.5rem;
   border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 1rem;
 }
 
 .luminance-swatches,
@@ -419,7 +373,6 @@ header p {
   z-index: 1;
 }
 
-/* Custom palette styles */
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -428,13 +381,10 @@ header p {
 }
 
 .add-color-btn {
-  background-color: var(--primary-color);
-  color: white;
   border: none;
   border-radius: 50%;
   width: 24px;
   height: 24px;
-  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -458,7 +408,6 @@ header p {
   height: 40px;
   padding: 0;
   border: none;
-  background: none;
   cursor: pointer;
 }
 
@@ -467,17 +416,13 @@ header p {
   padding: 0.5rem;
   border-radius: 4px;
   border: 1px solid #ccc;
-  font-family: monospace;
 }
 
 .remove-color-btn {
-  background-color: #f44336;
-  color: white;
   border: none;
   border-radius: 50%;
   width: 24px;
   height: 24px;
-  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -485,7 +430,6 @@ header p {
 }
 
 .remove-color-btn:disabled {
-  background-color: #ccc;
   cursor: not-allowed;
 }
 
@@ -499,19 +443,7 @@ header p {
   padding: 0.75rem;
   border-radius: 4px;
   border: none;
-  font-size: 1rem;
-  font-weight: bold;
   cursor: pointer;
-}
-
-.apply-btn {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.cancel-btn {
-  background-color: #f44336;
-  color: white;
 }
 
 .color-swatch.matched::before {
@@ -520,11 +452,6 @@ header p {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
-  font-size: 0.8rem;
-  font-weight: bold;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
-  background: rgba(0, 0, 0, 0.5);
   padding: 2px 4px;
   border-radius: 3px;
   white-space: nowrap;
@@ -537,7 +464,6 @@ header p {
 .setting-group label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: bold;
 }
 
 .setting-group input[type="range"] {
@@ -545,34 +471,16 @@ header p {
   margin-bottom: 0.5rem;
 }
 
-.value-display {
-  color: #666;
-  font-size: 0.9rem;
-}
-
 .process-btn {
   width: 100%;
   padding: 0.75rem;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
   border-radius: 4px;
-  font-size: 1rem;
-  font-weight: bold;
+  border: none;
   cursor: pointer;
 }
 
 .process-btn:disabled {
-  background-color: #ccc;
   cursor: not-allowed;
 }
 
-footer {
-  text-align: center;
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  color: #666;
-  font-size: 0.9rem;
-}
 </style>

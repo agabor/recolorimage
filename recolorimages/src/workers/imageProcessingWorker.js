@@ -230,7 +230,7 @@ function processHuesAndApplyColors(luminanceAdjustedArray, luminancePalette, hue
   
   // Process each pixel
   luminanceAdjustedArray.forEach((pixel, index) => {
-    const [h, s, l] = pixel.hsl;
+    const [h, , l] = pixel.hsl;
     
     // Convert to RGB to check grayscale
     const rgbColor = chroma.hsl(...pixel.hsl).rgb();
@@ -256,24 +256,15 @@ function processHuesAndApplyColors(luminanceAdjustedArray, luminancePalette, hue
           ...pixel,
           hsl: [mappedHue, mappedSaturation, l]
         };
-      } else {
-        // If hue is not close enough, find corresponding luminance palette color
-        const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
-        const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
-        processedArray[index] = {
-          ...pixel,
-          hsl: mappedHsl
-        };
+        return;
       }
-    } else {
-      // For grayscale pixels, find corresponding luminance palette color
-      const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
-      const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
-      processedArray[index] = {
-        ...pixel,
-        hsl: mappedHsl
-      };
     }
+    const mappedRgb = colorUtils.findClosestLuminanceColor(l, luminancePalette);
+    const mappedHsl = colorUtils.rgbToHsl(mappedRgb);
+    processedArray[index] = {
+      ...pixel,
+      hsl: mappedHsl
+    };
   });
   
   // Sort buckets by number of pixels (descending) for statistics

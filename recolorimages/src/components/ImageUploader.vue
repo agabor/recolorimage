@@ -3,6 +3,9 @@ import { ref, computed } from 'vue';
 
 const selectedFile = ref(null);
 const imageUrl = ref(null);
+const wasResized = ref(false);
+const originalDimensions = ref(null);
+const resizedDimensions = ref(null);
 
 const props = defineProps({
   isProcessing: {
@@ -59,13 +62,92 @@ const handleFiles = (files) => {
     return;
   }
   
-  selectedFile.value = file;
-  imageUrl.value = URL.createObjectURL(file);
-  emit('file-selected', file);
+  // Resize image if needed
+  resizeImageIfNeeded(file).then(resizedFile => {
+    selectedFile.value = resizedFile;
+    imageUrl.value = URL.createObjectURL(resizedFile);
+    emit('file-selected', resizedFile);
+  }).catch(error => {
+    console.error('Error resizing image:', error);
+    // Fallback to original file if resizing fails
+    selectedFile.value = file;
+    imageUrl.value = URL.createObjectURL(file);
+    emit('file-selected', file);
+  });
+};
+
+// Function to resize image if it exceeds 1000x1000 pixels
+const resizeImageIfNeeded = (file) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Store original dimensions
+      originalDimensions.value = { width: img.width, height: img.height };
+      
+      // Check if resizing is needed
+      if (img.width <= 1000 && img.height <= 1000) {
+        // No need to resize
+        wasResized.value = false;
+        URL.revokeObjectURL(img.src);
+        resolve(file);
+        return;
+      }
+      
+      // Calculate new dimensions while maintaining aspect ratio
+      let newWidth, newHeight;
+      if (img.width > img.height) {
+        newWidth = 1000;
+        newHeight = Math.round((img.height / img.width) * 1000);
+      } else {
+        newHeight = 1000;
+        newWidth = Math.round((img.width / img.height) * 1000);
+      }
+      
+      // Store resized dimensions
+      resizedDimensions.value = { width: newWidth, height: newHeight };
+      wasResized.value = true;
+      
+      // Create canvas for resizing
+      const canvas = document.createElement('canvas');
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      
+      // Draw resized image on canvas
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+      
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Failed to create blob from canvas'));
+          return;
+        }
+        
+        // Create new file from blob
+        const resizedFile = new File([blob], file.name, {
+          type: file.type,
+          lastModified: Date.now()
+        });
+        
+        URL.revokeObjectURL(img.src);
+        resolve(resizedFile);
+      }, file.type);
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image for resizing'));
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
 };
 
 const clearImage = () => {
   selectedFile.value = null;
+  wasResized.value = false;
+  originalDimensions.value = null;
+  resizedDimensions.value = null;
   if (imageUrl.value) {
     URL.revokeObjectURL(imageUrl.value);
     imageUrl.value = null;
@@ -82,6 +164,14 @@ const dropzoneClasses = computed(() => {
     'dropzone-active': dragActive.value,
     'dropzone-disabled': props.isProcessing
   };
+});
+
+const resizeInfo = computed(() => {
+  if (!wasResized.value || !originalDimensions.value || !resizedDimensions.value) {
+    return null;
+  }
+  
+  return `Resized from ${originalDimensions.value.width}×${originalDimensions.value.height} to ${resizedDimensions.value.width}×${resizedDimensions.value.height}`;
 });
 </script>
 
@@ -108,6 +198,9 @@ const dropzoneClasses = computed(() => {
       </div>
       <div v-else-if="imageUrl" class="image-preview">
         <img :src="imageUrl" alt="Selected image" />
+        <div v-if="wasResized" class="resize-notification">
+          {{ resizeInfo }}
+        </div>
         <button class="clear-button" @click.stop="clearImage">
           Clear Image
         </button>
@@ -120,7 +213,7 @@ const dropzoneClasses = computed(() => {
         </svg>
         <h3>Drag & Drop Image</h3>
         <p>or click to browse</p>
-        <p class="file-types">Supported formats: JPG, PNG</p>
+        <p class="file-types">Supported formats: JPG, PNG (max 1000×1000px)</p>
       </div>
     </div>
   </div>
@@ -202,6 +295,7 @@ const dropzoneClasses = computed(() => {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -210,6 +304,16 @@ const dropzoneClasses = computed(() => {
   max-width: 100%;
   max-height: 300px;
   object-fit: contain;
+}
+
+.resize-notification {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #856404;
 }
 
 .clear-button {

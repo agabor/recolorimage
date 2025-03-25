@@ -15,7 +15,12 @@ async function minifyWorker() {
         drop_debugger: true,
         passes: 2
       },
-      mangle: true,
+      mangle: {
+        toplevel: true, // Mangle top-level function names
+        properties: {
+          regex: /^_/ // Only mangle properties that start with underscore
+        }
+      },
       format: {
         comments: false
       }

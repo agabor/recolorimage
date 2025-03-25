@@ -8,8 +8,16 @@ import * as colorUtils from '../utils/colorUtils';
 
 // Create a new worker
 const createWorker = async () => {
-  const workerUrl = new URL('../workers/imageProcessingWorker.js', import.meta.url);
-  return new Worker(workerUrl, { type: 'module' });
+  // Check if we're in WordPress (production) environment
+  if (typeof window !== 'undefined' && window.recolorImagesPlugin) {
+    // Use the production URL
+    const workerUrl = `${window.recolorImagesPlugin.baseUrl}/assets/imageProcessingWorker.js`;
+    return new Worker(workerUrl, { type: 'module' });
+  } else {
+    // Use the local URL for development
+    const workerUrl = new URL('../workers/imageProcessingWorker.js', import.meta.url);
+    return new Worker(workerUrl, { type: 'module' });
+  }
 };
 
 export function useImageProcessing() {

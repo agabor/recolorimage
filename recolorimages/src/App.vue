@@ -6,7 +6,7 @@ import { useImageProcessing } from './composables/useImageProcessing';
 import { DEFAULT_PALETTES } from './utils/colorUtils';
 import chroma from 'chroma-js';
 
-// Initialize the image processing composable
+  // Initialize the image processing composable
 const {
   isProcessing,
   error,
@@ -267,7 +267,7 @@ watch(error, (newError) => {
               v-model="settings.hueThreshold" 
               min="1" 
               max="180" 
-              :disabled="isProcessing"
+              :disabled="isProcessing || settings.luminancePaletteOnly"
             >
             <span class="value-display">{{ settings.hueThreshold }}°</span>
           </div>
@@ -279,9 +279,23 @@ watch(error, (newError) => {
               v-model="settings.grayscaleThreshold" 
               min="1" 
               max="100" 
-              :disabled="isProcessing"
+              :disabled="isProcessing || settings.luminancePaletteOnly"
             >
             <span class="value-display">{{ settings.grayscaleThreshold }}</span>
+          </div>
+
+          <div class="setting-group checkbox-group">
+            <label>
+              <input 
+                type="checkbox" 
+                v-model="settings.luminancePaletteOnly" 
+                :disabled="isProcessing"
+              >
+              Use Luminance Palette Only
+            </label>
+            <div class="setting-description">
+              When enabled, all colors will be mapped to the luminance palette without using the hue palette.
+            </div>
           </div>
 
           <button 
@@ -487,6 +501,20 @@ watch(error, (newError) => {
 .setting-group input[type="range"] {
   width: 100%;
   margin-bottom: 0.5rem;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.setting-description {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
 }
 
 .process-btn {

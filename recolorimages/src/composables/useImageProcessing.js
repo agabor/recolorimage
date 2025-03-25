@@ -32,7 +32,8 @@ export function useImageProcessing() {
   const settings = reactive({
     grayscaleThreshold: 30,
     hueThreshold: 60,
-    outlierPercentage: 5
+    outlierPercentage: 5,
+    luminancePaletteOnly: false
   });
   
 // Selected palettes
@@ -258,7 +259,8 @@ const selectedPalette = reactive({
       const settingsClone = {
         grayscaleThreshold: settings.grayscaleThreshold,
         hueThreshold: settings.hueThreshold,
-        outlierPercentage: settings.outlierPercentage
+        outlierPercentage: settings.outlierPercentage,
+        luminancePaletteOnly: settings.luminancePaletteOnly
       };
 
       workerInstance.postMessage({

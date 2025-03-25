@@ -12,11 +12,11 @@ const createWorker = () => {
   if (typeof window !== 'undefined' && window.recolorImagesPlugin) {
     // Use the production URL
     const workerUrl = `${window.recolorImagesPlugin.baseUrl}/assets/imageProcessingWorker.js`;
-    return new Worker(workerUrl, { type: 'module' });
+    return new Worker(workerUrl); // Classic worker (no module type)
   } else {
     // Use the local URL for development
     const workerUrl = new URL('../workers/imageProcessingWorker.js', import.meta.url);
-    return new Worker(workerUrl, { type: 'module' });
+    return new Worker(workerUrl); // Classic worker (no module type)
   }
 };
 

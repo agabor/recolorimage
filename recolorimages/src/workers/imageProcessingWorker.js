@@ -2,8 +2,9 @@
  * Web Worker for image processing
  * This worker handles the CPU-intensive image processing tasks
  * to prevent UI freezing
+ * 
+ * This is a classic (non-module) worker
  */
-// No longer need chroma-js import as we've implemented our own color conversion functions
 
 /**
  * Convert a hex color string to HSL

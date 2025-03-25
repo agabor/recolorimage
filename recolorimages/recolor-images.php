@@ -22,7 +22,7 @@ class RecolorImages {
     }
 
     private function __construct() {
-        add_shortcode('recolor_images', array($this, 'render_shortcode'));
+        add_shortcode('recolorimage', array($this, 'render_shortcode'));
         add_action('wp_enqueue_scripts', array($this, 'register_assets'));
         add_action('wp_footer', array($this, 'maybe_enqueue_assets'));
     }

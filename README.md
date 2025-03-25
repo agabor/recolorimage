@@ -22,11 +22,11 @@ npm run build:plugin
    - After installation completes, click "Activate"
 
 ### Usage
-Use the shortcode `[recolor_images]` in any post or page where you want to display the Recolor Images application.
+Use the shortcode `[recolorimage]` in any post or page where you want to display the Recolor Images application.
 
 Example:
 ```
-[recolor_images]
+[recolorimage]
 ```
 
 The plugin will automatically load all necessary JavaScript and CSS files only on pages where the shortcode is used.

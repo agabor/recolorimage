@@ -38,8 +38,8 @@ export function useImageProcessing() {
 // Selected palettes
 const selectedPalette = reactive({
   name: 'nord',
-  luminance: colorUtils.DEFAULT_PALETTES.nord.luminance,
-  hue: colorUtils.DEFAULT_PALETTES.nord.hue,
+  luminance: colorUtils.DEFAULT_PALETTES.nord.luminance.map(hex => chroma(hex)),
+  hue: colorUtils.DEFAULT_PALETTES.nord.hue.map(hex => chroma(hex)),
   disabledHues: [],
   custom: false
 });
@@ -332,8 +332,8 @@ const selectedPalette = reactive({
 const setPalette = (paletteName) => {
   if (colorUtils.DEFAULT_PALETTES[paletteName]) {
     selectedPalette.name = paletteName;
-    selectedPalette.luminance = colorUtils.DEFAULT_PALETTES[paletteName].luminance;
-    selectedPalette.hue = colorUtils.DEFAULT_PALETTES[paletteName].hue;
+    selectedPalette.luminance = colorUtils.DEFAULT_PALETTES[paletteName].luminance.map(hex => chroma(hex));
+    selectedPalette.hue = colorUtils.DEFAULT_PALETTES[paletteName].hue.map(hex => chroma(hex));
     selectedPalette.disabledHues = [];
     selectedPalette.custom = false;
   }

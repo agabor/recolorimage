@@ -13,11 +13,11 @@ npm install
 npm run build:plugin
 ```
 
-2. The build process will create a `plugin-build/recolor-images.zip` file.
+2. The build process will create a `plugin-build/recolorimage.zip` file.
 
 3. Install the plugin in WordPress:
    - Go to Plugins > Add New > Upload Plugin
-   - Select the `recolor-images.zip` file
+   - Select the `recolorimage.zip` file
    - Click "Install Now"
    - After installation completes, click "Activate"
 

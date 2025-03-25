@@ -29,7 +29,7 @@ class RecolorImages {
 
     public function register_assets() {
         wp_register_script(
-            'recolor-images',
+            'recolorimage',
             plugin_dir_url(__FILE__) . 'dist/assets/index.js',
             array(),
             '1.0.0',
@@ -37,7 +37,7 @@ class RecolorImages {
         );
         
         wp_register_style(
-            'recolor-images',
+            'recolorimage',
             plugin_dir_url(__FILE__) . 'dist/assets/style.css',
             array(),
             '1.0.0'
@@ -46,17 +46,17 @@ class RecolorImages {
 
     public function maybe_enqueue_assets() {
         if ($this->shortcode_used) {
-            wp_enqueue_script('recolor-images');
-            wp_enqueue_style('recolor-images');
+            wp_enqueue_script('recolorimage');
+            wp_enqueue_style('recolorimage');
             
             // Add plugin base URL to window object
-            wp_add_inline_script('recolor-images', 'window.recolorImagesPlugin = { baseUrl: "' . plugin_dir_url(__FILE__) . 'dist" };', 'before');
+            wp_add_inline_script('recolorimage', 'window.recolorImagesPlugin = { baseUrl: "' . plugin_dir_url(__FILE__) . 'dist" };', 'before');
         }
     }
 
     public function render_shortcode($atts) {
         $this->shortcode_used = true;
-        return '<div id="recolor-images-app"></div>';
+        return '<div id="recolorimage-app"></div>';
     }
 }
 

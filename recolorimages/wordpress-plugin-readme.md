@@ -11,11 +11,11 @@ npm install
 npm run build:plugin
 ```
 
-2. The build process will create a `plugin-build/recolor-images.zip` file.
+2. The build process will create a `plugin-build/recolorimage.zip` file.
 
 3. Install the plugin in WordPress:
    - Go to Plugins > Add New > Upload Plugin
-   - Select the `recolor-images.zip` file
+   - Select the `recolorimage.zip` file
    - Click "Install Now"
    - After installation completes, click "Activate"
 
@@ -50,5 +50,5 @@ npm run build
 ## Notes
 
 - The plugin uses conditional asset loading, meaning the JavaScript and CSS files are only loaded on pages where the shortcode is present
-- The Vue.js application is mounted to an element with ID `recolor-images-app`
+- The Vue.js application is mounted to an element with ID `recolorimage-app`
 - All assets are properly minified and optimized for production use

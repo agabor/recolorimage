@@ -52,7 +52,7 @@ The Vue.js application is implemented as modular components and composables for 
 - Fallback button for manual file selection
 
 ### 2. Color Palette Components
-**Implemented in**: `recolorimages/src/components/ColorPalette.vue`
+**Implemented in**: `recolorimages/src/App.vue`
 - **Luminance Palette**:
   - Displayed as individual color swatches ordered by luminance (dark to light)
   - Minimum of 2 colors

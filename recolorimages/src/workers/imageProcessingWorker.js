@@ -400,12 +400,16 @@ function processImage(pixelData, width, height, luminancePalette, huePalette, se
     // Calculate percentages for each color bucket
     selectedBucketIndices.forEach(bucketIndex => {
       const pixelCount = paletteBuckets[bucketIndex];
-      const percentage = Math.round((pixelCount / totalPixels) * 100);
-      
-      matchedPaletteStats.push({
-        index: bucketIndex,
-        percentage: percentage
-      });
+      let percentage = Math.round((10 * pixelCount / totalPixels) * 100) / 10;
+      if (percentage > 1) {
+        percentage = Math.round(percentage);
+      }
+      if (percentage >= 0.5) {
+        matchedPaletteStats.push({
+          index: bucketIndex,
+          percentage: percentage
+        });
+      }
     });
   }
   console.timeEnd('Statistics Calculation');

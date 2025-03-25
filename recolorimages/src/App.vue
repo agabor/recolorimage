@@ -101,7 +101,7 @@ const cancelCustomization = () => {
 // Get match percentage for a color
 const getMatchPercentage = (index) => {
   const stat = matchedPaletteStats.value.find(stat => stat.index === index);
-  return stat ? stat.percentage : 0;
+  return stat ? stat.percentage : null;
 };
 
 // Handle download
@@ -172,7 +172,7 @@ watch(error, (newError) => {
                 class="color-swatch"
                 :class="{ 
                   'disabled': selectedPalette.disabledHues?.includes(index),
-                  'matched': getMatchPercentage(index) > 0
+                  'matched': getMatchPercentage(index) !== null
                 }"
                 :style="{ backgroundColor: color.hex() }"
                 :data-percentage="getMatchPercentage(index)"
@@ -369,7 +369,7 @@ watch(error, (newError) => {
 }
 
 .color-swatch.matched {
-  transform: scale(1.1);
+  transform: scale(1.25);
   z-index: 1;
 }
 
@@ -455,6 +455,9 @@ watch(error, (newError) => {
   padding: 2px 4px;
   border-radius: 3px;
   white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.6);
+  color: black;
+  font-size: smaller;
 }
 
 .setting-group {

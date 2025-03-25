@@ -7,7 +7,7 @@ import chroma from 'chroma-js';
 import * as colorUtils from '../utils/colorUtils';
 
 // Create a new worker
-const createWorker = async () => {
+const createWorker = () => {
   // Check if we're in WordPress (production) environment
   if (typeof window !== 'undefined' && window.recolorImagesPlugin) {
     // Use the production URL
@@ -135,9 +135,9 @@ const selectedPalette = reactive({
   let worker = null;
   
   // Create a worker instance when needed
-  const getWorker = async () => {
+  const getWorker = () => {
     if (!worker) {
-      worker = await createWorker();
+      worker = createWorker();
     }
     return worker;
   };
@@ -192,91 +192,84 @@ const selectedPalette = reactive({
     const pixelData = getPixelData(canvas);
 
     return new Promise((resolve, reject) => {
-      getWorker()
-        .then(workerInstance => {
-        
-          // Set up message handler
-          workerInstance.onmessage = (e) => {
-          const { error: workerError, ...imageData } = e.data;
-          
-          if (workerError) {
-            error.value = `Worker error: ${workerError}`;
-            isProcessing.value = false;
-            reject(new Error(workerError));
-            return;
-          }
-          
-          // Handle final result
-          if (imageData.processedImageData) {
-            processedImage.value = {
-              canvas: createCanvasFromImageData(imageData.processedImageData),
-              width,
-              height
-            };
-            
-            // Store the matched palette stats, mapping from worker indices to original indices
-            if (imageData.matchedPaletteStats && imageData.matchedPaletteStats.length > 0) {
-              // Map worker indices to original palette indices
-              matchedPaletteStats.value = imageData.matchedPaletteStats.map(stat => ({
-                index: workerToOriginalIndices[stat.index],
-                percentage: stat.percentage
-              }));
-            } else {
-              matchedPaletteStats.value = [];
-            }
-            
-            isProcessing.value = false;
-            resolve(processedImage.value);
-          }
-        };
-        
-          // Handle worker errors
-          workerInstance.onerror = (err) => {
-            error.value = `Worker error: ${err.message}`;
-            isProcessing.value = false;
-            reject(err);
-          };
+      const workerInstance = getWorker();
 
-          // Send data to worker
-          // Note: We need to ensure all data is cloneable
-          // Convert ImageData to a plain array to avoid cloning issues
-          const pixelDataArray = Array.from(pixelData.data);
+      // Set up message handler
+      workerInstance.onmessage = (e) => {
+        const { error: workerError, ...imageData } = e.data;
 
-          // Convert chroma.Color objects to hex strings for cloning
-          const luminancePaletteClone = selectedPalette.luminance.map(color => color.hex());
-
-          // Filter out disabled hue colors and keep track of original indices
-          const enabledHuesWithIndices = selectedPalette.hue
-            .map((color, index) => ({ color, originalIndex: index }))
-            .filter(item => !selectedPalette.disabledHues.includes(item.originalIndex));
-
-          // Create a map from worker indices to original palette indices
-          const workerToOriginalIndices = enabledHuesWithIndices.map(item => item.originalIndex);
-
-          const huePaletteClone = enabledHuesWithIndices.map(item => item.color.hex());
-
-          // Create a plain object with the settings
-          const settingsClone = {
-            grayscaleThreshold: settings.grayscaleThreshold,
-            hueThreshold: settings.hueThreshold,
-            outlierPercentage: settings.outlierPercentage
-          };
-
-          workerInstance.postMessage({
-            type: 'processImage',
-            pixelData: pixelDataArray,
-            width,
-            height,
-            luminancePalette: luminancePaletteClone,
-            huePalette: huePaletteClone,
-            settings: settingsClone
-          });
-        })
-        .catch(err => {
-          error.value = `Processing failed: ${err.message}`;
+        if (workerError) {
+          error.value = `Worker error: ${workerError}`;
           isProcessing.value = false;
-          reject(err);
-        });
+          reject(new Error(workerError));
+          return;
+        }
+
+        // Handle final result
+        if (imageData.processedImageData) {
+          processedImage.value = {
+            canvas: createCanvasFromImageData(imageData.processedImageData),
+            width,
+            height
+          };
+
+          // Store the matched palette stats, mapping from worker indices to original indices
+          if (imageData.matchedPaletteStats && imageData.matchedPaletteStats.length > 0) {
+            // Map worker indices to original palette indices
+            matchedPaletteStats.value = imageData.matchedPaletteStats.map(stat => ({
+              index: workerToOriginalIndices[stat.index],
+              percentage: stat.percentage
+            }));
+          } else {
+            matchedPaletteStats.value = [];
+          }
+
+          isProcessing.value = false;
+          resolve(processedImage.value);
+        }
+      };
+
+      // Handle worker errors
+      workerInstance.onerror = (err) => {
+        error.value = `Worker error: ${err.message}`;
+        isProcessing.value = false;
+        reject(err);
+      };
+
+      // Send data to worker
+      // Note: We need to ensure all data is cloneable
+      // Convert ImageData to a plain array to avoid cloning issues
+      const pixelDataArray = Array.from(pixelData.data);
+
+      // Convert chroma.Color objects to hex strings for cloning
+      const luminancePaletteClone = selectedPalette.luminance.map(color => color.hex());
+
+      // Filter out disabled hue colors and keep track of original indices
+      const enabledHuesWithIndices = selectedPalette.hue
+        .map((color, index) => ({ color, originalIndex: index }))
+        .filter(item => !selectedPalette.disabledHues.includes(item.originalIndex));
+
+      // Create a map from worker indices to original palette indices
+      const workerToOriginalIndices = enabledHuesWithIndices.map(item => item.originalIndex);
+
+      const huePaletteClone = enabledHuesWithIndices.map(item => item.color.hex());
+
+      // Create a plain object with the settings
+      const settingsClone = {
+        grayscaleThreshold: settings.grayscaleThreshold,
+        hueThreshold: settings.hueThreshold,
+        outlierPercentage: settings.outlierPercentage
+      };
+
+      workerInstance.postMessage({
+        type: 'processImage',
+        pixelData: pixelDataArray,
+        width,
+        height,
+        luminancePalette: luminancePaletteClone,
+        huePalette: huePaletteClone,
+        settings: settingsClone
+      });
     });
   };
   

@@ -367,7 +367,22 @@ watch(error, (newError) => {
 .color-swatch.disabled {
   opacity: 0.5;
 }
-
+.color-swatch.disabled::after {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background: repeating-linear-gradient(
+     45deg,
+     rgba(0, 0, 0, 0.1),
+     rgba(0, 0, 0, 0.1) 5px,
+     rgba(0, 0, 0, 0.2) 5px,
+     rgba(0, 0, 0, 0.2) 10px
+   );
+   border-radius: 4px;
+ }
 .color-swatch.matched {
   transform: scale(1.25);
   z-index: 1;

@@ -1,4 +1,4 @@
-# Recolor Images WordPress Plugin
+# Recolor Image WordPress Plugin
 
 ## Project Overview
 A WordPress plugin that provides a powerful image recoloring tool using Vue.js. The plugin transforms images by mapping their colors to a custom palette using a dual-processing approach: luminance mapping and color adjustment.
@@ -22,7 +22,7 @@ npm run build:plugin
    - After installation completes, click "Activate"
 
 ### Usage
-Use the shortcode `[recolorimage]` in any post or page where you want to display the Recolor Images application.
+Use the shortcode `[recolorimage]` in any post or page where you want to display the Recolor Image application.
 
 Example:
 ```

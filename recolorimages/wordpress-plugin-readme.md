@@ -1,6 +1,6 @@
-# Recolor Images WordPress Plugin
+# Recolor Image WordPress Plugin
 
-This WordPress plugin integrates the Recolor Images Vue.js application into WordPress sites using a shortcode.
+This WordPress plugin integrates the Recolor Image Vue.js application into WordPress sites using a shortcode.
 
 ## Installation
 
@@ -21,7 +21,7 @@ npm run build:plugin
 
 ## Usage
 
-Use the shortcode `[recolorimage]` in any post or page where you want to display the Recolor Images application.
+Use the shortcode `[recolorimage]` in any post or page where you want to display the Recolor Image application.
 
 Example:
 ```

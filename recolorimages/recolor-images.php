@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Recolor Images
+ * Plugin Name: Recolor Image
  * Description: Transform images by mapping their colors to a custom palette using luminance mapping and color adjustment.
  * Version: 1.0.0
  * Author: CodeSharp

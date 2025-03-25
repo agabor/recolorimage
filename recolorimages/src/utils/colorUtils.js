@@ -1,12 +1,4 @@
-/**
- * Color utility functions for image processing
- */
-import chroma from 'chroma-js';
 
-// Ensure chroma is available
-if (!chroma) {
-  console.error('Chroma.js is not available');
-}
 
 /**
  * Default color palettes

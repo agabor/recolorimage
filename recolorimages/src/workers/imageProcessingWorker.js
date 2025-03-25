@@ -3,24 +3,120 @@
  * This worker handles the CPU-intensive image processing tasks
  * to prevent UI freezing
  */
-import chroma from 'chroma-js';
+// No longer need chroma-js import as we've implemented our own color conversion functions
+
+/**
+ * Convert a hex color string to HSL
+ * @param {String} hex - Hex color string (e.g., "#FF0000")
+ * @returns {Array} - HSL color value [h, s, l]
+ */
+function hexToHsl(hex) {
+  // Remove # if present
+  hex = hex.replace(/^#/, '');
+  
+  // Parse the hex values
+  let r, g, b;
+  if (hex.length === 3) {
+    // Short hex format (#RGB)
+    r = parseInt(hex.charAt(0) + hex.charAt(0), 16) / 255;
+    g = parseInt(hex.charAt(1) + hex.charAt(1), 16) / 255;
+    b = parseInt(hex.charAt(2) + hex.charAt(2), 16) / 255;
+  } else {
+    // Full hex format (#RRGGBB)
+    r = parseInt(hex.substring(0, 2), 16) / 255;
+    g = parseInt(hex.substring(2, 4), 16) / 255;
+    b = parseInt(hex.substring(4, 6), 16) / 255;
+  }
+  
+  // Convert RGB to HSL
+  return rgbToHsl([r * 255, g * 255, b * 255]);
+}
 
 /**
  * Convert RGB to HSL
- * @param {Array} rgb - RGB color value [r, g, b]
+ * @param {Array} rgb - RGB color value [r, g, b] (0-255 range)
  * @returns {Array} - HSL color value [h, s, l]
  */
 function rgbToHsl(rgb) {
-  return chroma(rgb).hsl();
+  // Normalize RGB values to 0-1 range
+  const r = rgb[0] / 255;
+  const g = rgb[1] / 255;
+  const b = rgb[2] / 255;
+  
+  // Find min and max values
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  
+  // Calculate lightness
+  const l = (max + min) / 2;
+  
+  // If min and max are the same, it's a shade of gray (no saturation)
+  if (max === min) {
+    return [0, 0, l]; // Hue is 0, saturation is 0
+  }
+  
+  // Calculate saturation
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  
+  // Calculate hue
+  let h;
+  switch (max) {
+    case r:
+      h = (g - b) / d + (g < b ? 6 : 0);
+      break;
+    case g:
+      h = (b - r) / d + 2;
+      break;
+    case b:
+      h = (r - g) / d + 4;
+      break;
+  }
+  
+  h = h * 60; // Convert to degrees
+  
+  return [h, s, l];
 }
 
 /**
  * Convert HSL to RGB
  * @param {Array} hsl - HSL color value [h, s, l]
- * @returns {Array} - RGB color value [r, g, b]
+ * @returns {Array} - RGB color value [r, g, b] (0-255 range)
  */
 function hslToRgb(hsl) {
-  return chroma.hsl(...hsl).rgb();
+  const h = hsl[0];
+  const s = hsl[1];
+  const l = hsl[2];
+  
+  // If no saturation, it's a shade of gray
+  if (s === 0) {
+    const gray = l * 255;
+    return [gray, gray, gray];
+  }
+  
+  // Helper function for hue to RGB conversion
+  const hueToRgb = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  
+  const r = hueToRgb(p, q, (h / 360) + 1/3);
+  const g = hueToRgb(p, q, h / 360);
+  const b = hueToRgb(p, q, (h / 360) - 1/3);
+  
+  // Convert to 0-255 range
+  return [
+    Math.round(r * 255),
+    Math.round(g * 255),
+    Math.round(b * 255)
+  ];
 }
 
 /**
@@ -69,7 +165,8 @@ function hueDistance(hslColor, huePalette) {
   
   // Find minimum distance to any palette hue
   return Math.min(...huePalette.map(paletteColor => {
-    const paletteHue = chroma(paletteColor).get('hsl.h') || 0;
+    const paletteHsl = hexToHsl(paletteColor);
+    const paletteHue = paletteHsl[0] || 0;
     
     // Calculate hue distance considering the circular nature of hue (0-360)
     let distance = Math.abs(hue - paletteHue);
@@ -82,6 +179,45 @@ function hueDistance(hslColor, huePalette) {
 }
 
 /**
+ * Mix two HSL colors with a given ratio
+ * @param {Array} hsl1 - First HSL color
+ * @param {Array} hsl2 - Second HSL color
+ * @param {Number} ratio - Mixing ratio (0-1), 0 = all hsl1, 1 = all hsl2
+ * @returns {Array} - Mixed HSL color
+ */
+function mixHsl(hsl1, hsl2, ratio) {
+  // Ensure ratio is between 0 and 1
+  ratio = Math.max(0, Math.min(1, ratio));
+  
+  // Extract components
+  const [h1, s1, l1] = hsl1;
+  const [h2, s2, l2] = hsl2;
+  
+  // Handle hue interpolation considering the circular nature
+  let h;
+  const hueDiff = Math.abs(h1 - h2);
+  
+  if (hueDiff > 180) {
+    // Go the other way around the color wheel
+    if (h1 < h2) {
+      h = (h1 + 360) * (1 - ratio) + h2 * ratio;
+    } else {
+      h = h1 * (1 - ratio) + (h2 + 360) * ratio;
+    }
+    h = h % 360;
+  } else {
+    // Regular linear interpolation
+    h = h1 * (1 - ratio) + h2 * ratio;
+  }
+  
+  // Linear interpolation for saturation and lightness
+  const s = s1 * (1 - ratio) + s2 * ratio;
+  const l = l1 * (1 - ratio) + l2 * ratio;
+  
+  return [h, s, l];
+}
+
+/**
  * Find the closest color in a palette to a given lightness value
  * @param {Number} lightness - Lightness value (0-1)
  * @param {Array} luminancePalette - Array of colors ordered by luminance
@@ -89,9 +225,10 @@ function hueDistance(hslColor, huePalette) {
  */
 function findClosestLuminanceColor(lightness, luminancePalette) {
   // Convert palette to HSL to extract lightness values
-  const paletteLightness = luminancePalette.map(color => 
-    chroma(color).get('hsl.l')
-  );
+  const paletteLightness = luminancePalette.map(color => {
+    const hsl = hexToHsl(color);
+    return hsl[2]; // Lightness component
+  });
   
   // Find the closest indices
   let lowerIndex = 0;
@@ -108,11 +245,11 @@ function findClosestLuminanceColor(lightness, luminancePalette) {
   
   // If exact match or at the extremes
   if (lowerIndex === upperIndex || lightness <= paletteLightness[0]) {
-    return chroma(luminancePalette[lowerIndex]).hsl();
+    return hexToHsl(luminancePalette[lowerIndex]);
   }
   
   if (lightness >= paletteLightness[paletteLightness.length - 1]) {
-    return chroma(luminancePalette[upperIndex]).hsl();
+    return hexToHsl(luminancePalette[upperIndex]);
   }
   
   // Linear interpolation between the two closest colors
@@ -120,10 +257,10 @@ function findClosestLuminanceColor(lightness, luminancePalette) {
   const upperL = paletteLightness[upperIndex];
   const ratio = (lightness - lowerL) / (upperL - lowerL);
   
-  const lowerColor = chroma(luminancePalette[lowerIndex]);
-  const upperColor = chroma(luminancePalette[upperIndex]);
+  const lowerHsl = hexToHsl(luminancePalette[lowerIndex]);
+  const upperHsl = hexToHsl(luminancePalette[upperIndex]);
   
-  return chroma.mix(lowerColor, upperColor, ratio, 'hsl').hsl();
+  return mixHsl(lowerHsl, upperHsl, ratio);
 }
 
 /**
@@ -137,7 +274,8 @@ function findClosestHueColor(hue, huePalette) {
   let minDistance = 180; // Maximum possible hue distance
   
   huePalette.forEach((color, index) => {
-    const paletteHue = chroma(color).get('hsl.h') || 0;
+    const paletteHsl = hexToHsl(color);
+    const paletteHue = paletteHsl[0] || 0;
     
     // Calculate hue distance considering the circular nature of hue (0-360)
     let distance = Math.abs(hue - paletteHue);
@@ -218,10 +356,9 @@ self.onmessage = function(e) {
 function processImage(pixelData, width, height, luminancePalette, huePalette, settings) {
   console.time('Total Processing Time');
   
-  // Convert hex strings back to chroma.Color objects
+  // No need to convert hex strings to chroma.Color objects anymore
   console.time('Color Object Conversion');
-  luminancePalette = luminancePalette.map(hex => chroma(hex));
-  huePalette = huePalette.map(hex => chroma(hex));
+  // We'll use the hex strings directly with our custom functions
   console.timeEnd('Color Object Conversion');
   
   // Step 1: Convert to HSL array
@@ -345,7 +482,8 @@ function adjustLuminanceRange(hslArray, luminancePalette, outlierPercentage) {
   // Calculate luminance range of palette
   const paletteLightness = luminancePalette.map(color => {
     try {
-      return chroma(color).get('hsl.l');
+      const hsl = hexToHsl(color);
+      return hsl[2]; // Lightness component
     } catch (err) {
       console.error('Error converting color:', color, err);
       return 0;
@@ -405,16 +543,16 @@ function processHuesAndApplyColors(luminanceAdjustedArray, luminancePalette, hue
   
   // Process each pixel
   luminanceAdjustedArray.forEach((pixel, index) => {
-    const [h, , l] = pixel.hsl;
+    const [h, s, l] = pixel.hsl;
     
     // Convert to RGB to check grayscale
-    const rgbColor = chroma.hsl(...pixel.hsl).rgb();
+    const rgbColor = hslToRgb(pixel.hsl);
     
     // First check if the pixel is grayscale
     if (!isGrayScale(rgbColor, settings.grayscaleThreshold)) {
       // Only find closest hue for non-grayscale pixels
       const { color: closestColor, index: closestPaletteIndex } = findClosestHueColor(h, huePalette);
-      const closestHsl = chroma(closestColor).hsl();
+      const closestHsl = hexToHsl(closestColor);
       
       // Check if the hue is close enough to a palette color
       if (hueDistance(pixel.hsl, [closestColor]) < settings.hueThreshold) {

@@ -7,7 +7,7 @@
 		"dev": "vite",
 		"minify-worker": "node minify-worker.js",
 		"build": "vite build && npm run minify-worker",
-		"build:plugin": "vite build && npm run minify-worker && mkdir -p plugin-build/recolorimage && cp -r dist recolorimage.php wordpress-plugin-readme.md plugin-build/recolorimage/ && cd plugin-build && zip -r recolorimage.zip recolorimage && rm -rf recolorimage",
+		"build:plugin": "rm -rf dist && rm -rf plugin-build && vite build && npm run minify-worker && mkdir -p plugin-build/recolorimage && cp -r dist recolorimage.php wordpress-plugin-readme.md plugin-build/recolorimage/ && cd plugin-build && zip -r recolorimage.zip recolorimage && rm -rf recolorimage",
 		"preview": "vite preview",
 		"test:unit": "vitest",
 		"lint": "eslint . --fix",

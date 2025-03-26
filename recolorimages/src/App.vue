@@ -302,11 +302,7 @@ watch(error, (newError) => {
 </template>
 
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+
 
 .app {
   width: 100%;

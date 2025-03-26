@@ -21,14 +21,8 @@ const {
   getProcessedImageUrl,
   downloadProcessedImage,
   setPalette,
-  setCustomPalette,
   toggleHueColor
 } = useImageProcessing();
-
-// Custom palette state
-const isCustomizing = ref(false);
-const customLuminancePalette = ref([]);
-const customHuePalette = ref([]);
 
 // Image URL for display
 const processedImageUrl = ref(null);
@@ -55,47 +49,46 @@ const handleProcess = async () => {
 
 // Handle palette update
 const handlePaletteUpdate = (paletteName) => {
-  if (paletteName === 'custom') {
-    isCustomizing.value = true;
-    customLuminancePalette.value = [...selectedPalette.value.luminance].map(color => color.hex());
-    customHuePalette.value = [...selectedPalette.value.hue].map(color => color.hex());
-  } else {
-    setPalette(paletteName);
-    isCustomizing.value = false;
+  setPalette(paletteName);
+};
+
+// Color manipulation functions
+const updateLuminanceColor = (index, newColor) => {
+  selectedPalette.luminance[index] = chroma(newColor);
+};
+
+const updateHueColor = (index, newColor) => {
+  selectedPalette.hue[index] = chroma(newColor);
+};
+
+const deleteLuminanceColor = (index) => {
+  if (selectedPalette.luminance.length > 2) {
+    selectedPalette.luminance.splice(index, 1);
   }
 };
 
-// Custom palette functions
-const addLuminanceColor = () => {
-  customLuminancePalette.value.push('#FFFFFF');
-};
-
-const addHueColor = () => {
-  customHuePalette.value.push('#FF0000');
-};
-
-const removeLuminanceColor = (index) => {
-  if (customLuminancePalette.value.length > 2) {
-    customLuminancePalette.value.splice(index, 1);
+const deleteHueColor = (index) => {
+  if (selectedPalette.hue.length > 1) {
+    selectedPalette.hue.splice(index, 1);
+    // Remove the index from disabledHues and adjust remaining indices
+    selectedPalette.disabledHues = selectedPalette.disabledHues
+      .filter(i => i !== index)
+      .map(i => i > index ? i - 1 : i);
   }
 };
 
-const removeHueColor = (index) => {
-  if (customHuePalette.value.length > 1) {
-    customHuePalette.value.splice(index, 1);
-  }
+// Edit mode state
+const isEditMode = ref(false);
+
+// Reset palette
+const resetPalette = () => {
+  setPalette(selectedPalette.name);
+  isEditMode.value = false;
 };
 
-const applyCustomPalette = () => {
-  const luminanceColors = customLuminancePalette.value.map(hex => chroma(hex));
-  const hueColors = customHuePalette.value.map(hex => chroma(hex));
-  setCustomPalette(luminanceColors, hueColors);
-  isCustomizing.value = false;
-};
-
-const cancelCustomization = () => {
-  isCustomizing.value = false;
-  setPalette(selectedPalette.value.name);
+// Toggle edit mode
+const toggleEditMode = () => {
+  isEditMode.value = !isEditMode.value;
 };
 
 // Get match percentage for a color
@@ -143,120 +136,107 @@ watch(error, (newError) => {
               <option v-for="palette in Object.keys(DEFAULT_PALETTES)" :key="palette" :value="palette">
                 {{ palette.charAt(0).toUpperCase() + palette.slice(1) }}
               </option>
-              <option value="custom">Custom</option>
             </select>
           </div>
         </section>
 
-        <template v-if="!isCustomizing">
-          <!-- Luminance Palette -->
-          <section class="section">
+        <!-- Luminance Palette -->
+        <section class="section">
+          <div class="section-header">
             <h3>Luminance Palette</h3>
-            <div class="luminance-swatches">
-              <div 
-                v-for="(color, index) in selectedPalette.luminance" 
-                :key="index"
-                class="color-swatch luminance-swatch"
-                :style="{ backgroundColor: color.hex() }"
-              ></div>
-            </div>
-          </section>
-
-          <!-- Hue Palette -->
-          <section class="section">
-            <h3>Hue Palette <small>(click to enable/disable)</small></h3>
-            <div class="hue-swatches">
-              <div 
-                v-for="(color, index) in selectedPalette.hue" 
-                :key="index"
-                class="color-swatch"
-                :class="{ 
-                  'disabled': selectedPalette.disabledHues?.includes(index),
-                  'matched': getMatchPercentage(index) !== null
-                }"
-                :style="{ backgroundColor: color.hex() }"
-                :data-percentage="getMatchPercentage(index)"
-                @click="toggleHueColor(index)"
-              ></div>
-            </div>
-          </section>
-        </template>
-
-        <template v-else>
-          <!-- Custom Luminance Palette -->
-          <section class="section">
-            <div class="section-header">
-              <h3>Custom Luminance Palette</h3>
-              <button class="add-color-btn" @click="addLuminanceColor">+</button>
-            </div>
-            <div class="color-editor">
-              <div 
-                v-for="(color, index) in customLuminancePalette" 
-                :key="index"
-                class="color-input-group"
+            <div class="palette-actions">
+              <button 
+                class="edit-mode-btn" 
+                :class="{ active: isEditMode }" 
+                @click="toggleEditMode"
+                title="Toggle edit mode"
               >
-                <input 
-                  type="color" 
-                  v-model="customLuminancePalette[index]" 
-                  class="color-picker"
-                />
-                <input 
-                  type="text" 
-                  v-model="customLuminancePalette[index]" 
-                  class="color-text"
-                />
+                ✎ Edit Colors
+              </button>
+              <button 
+                v-if="isEditMode"
+                class="reset-btn" 
+                @click="resetPalette"
+                title="Reset to original colors"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+          <div class="luminance-swatches">
+            <div 
+              v-for="(color, index) in selectedPalette.luminance" 
+              :key="index"
+              class="color-swatch luminance-swatch"
+            >
+              <div class="color-display" :style="{ backgroundColor: color.hex() }"></div>
+              <template v-if="isEditMode">
                 <button 
-                  class="remove-color-btn" 
-                  @click="removeLuminanceColor(index)"
-                  :disabled="customLuminancePalette.length <= 2"
+                  class="edit-color-btn" 
+                  title="Edit color"
+                >
+                  <input 
+                    type="color" 
+                    :value="color.hex()"
+                    @input="updateLuminanceColor(index, $event.target.value)"
+                    class="color-picker"
+                  />
+                  <span>✎</span>
+                </button>
+                <button 
+                  v-if="selectedPalette.luminance.length > 2"
+                  class="delete-color-btn" 
+                  title="Delete color"
+                  @click="deleteLuminanceColor(index)"
                 >
                   ×
                 </button>
-              </div>
+              </template>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <!-- Custom Hue Palette -->
-          <section class="section">
-            <div class="section-header">
-              <h3>Custom Hue Palette</h3>
-              <button class="add-color-btn" @click="addHueColor">+</button>
-            </div>
-            <div class="color-editor">
-              <div 
-                v-for="(color, index) in customHuePalette" 
-                :key="index"
-                class="color-input-group"
-              >
-                <input 
-                  type="color" 
-                  v-model="customHuePalette[index]" 
-                  class="color-picker"
-                />
-                <input 
-                  type="text" 
-                  v-model="customHuePalette[index]" 
-                  class="color-text"
-                />
+        <!-- Hue Palette -->
+        <section class="section">
+          <h3>Hue Palette <small>(click to enable/disable)</small></h3>
+          <div class="hue-swatches">
+            <div 
+              v-for="(color, index) in selectedPalette.hue" 
+              :key="index"
+              class="color-swatch"
+              :class="{ 
+                'disabled': selectedPalette.disabledHues?.includes(index),
+                'matched': getMatchPercentage(index) !== null
+              }"
+              :data-percentage="getMatchPercentage(index)"
+              @click="!isEditMode && toggleHueColor(index)"
+            >
+              <div class="color-display" :style="{ backgroundColor: color.hex() }"></div>
+              <template v-if="isEditMode">
                 <button 
-                  class="remove-color-btn" 
-                  @click="removeHueColor(index)"
-                  :disabled="customHuePalette.length <= 1"
+                  class="edit-color-btn" 
+                  title="Edit color"
+                >
+                  <input 
+                    type="color" 
+                    :value="color.hex()"
+                    @input="updateHueColor(index, $event.target.value)"
+                    class="color-picker"
+                  />
+                  <span>✎</span>
+                </button>
+                <button 
+                  v-if="selectedPalette.hue.length > 1"
+                  class="delete-color-btn" 
+                  title="Delete color"
+                  @click="deleteHueColor(index)"
                 >
                   ×
                 </button>
-              </div>
+              </template>
             </div>
-          </section>
-
-          <!-- Custom Palette Actions -->
-          <section class="section">
-            <div class="custom-palette-actions">
-              <button class="apply-btn" @click="applyCustomPalette">Apply Custom Palette</button>
-              <button class="cancel-btn" @click="cancelCustomization">Cancel</button>
-            </div>
-          </section>
-        </template>
+          </div>
+        </section>
 
         <!-- Processing Controls -->
         <section class="section">
@@ -527,6 +507,107 @@ watch(error, (newError) => {
 
 .process-btn:disabled {
   cursor: not-allowed;
+}
+
+.color-swatch {
+  position: relative;
+}
+
+.color-display {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.edit-color-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 12px;
+  color: #666;
+  z-index: 2;
+}
+
+.edit-color-btn:hover {
+  background: #f0f0f0;
+}
+
+.color-picker {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.palette-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-mode-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-mode-btn.active {
+  background-color: #e6e6e6;
+  border-color: #999;
+}
+
+.edit-mode-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.reset-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.delete-color-btn {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 14px;
+  color: #ff4444;
+  z-index: 2;
+}
+
+.delete-color-btn:hover {
+  background: #fff0f0;
+  border-color: #ff4444;
 }
 
 </style>

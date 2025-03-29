@@ -94,14 +94,6 @@ const imageDimensions = computed(() => {
   object-fit: contain;
 }
 
-.no-image {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
-  color: #999;
-}
-
 .image-info {
   display: flex;
   justify-content: space-between;
@@ -134,12 +126,6 @@ const imageDimensions = computed(() => {
   color: white;
 }
 
-.toggle-btn {
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ddd;
-}
-
 .empty-state {
   display: flex;
   justify-content: center;
@@ -152,15 +138,6 @@ const imageDimensions = computed(() => {
 }
 
 @media (max-width: 768px) {
-  .tabs {
-    flex-wrap: wrap;
-  }
-  
-  .tab-btn {
-    flex: 1;
-    text-align: center;
-  }
-  
   .image-info {
     flex-direction: column;
     gap: 0.5rem;

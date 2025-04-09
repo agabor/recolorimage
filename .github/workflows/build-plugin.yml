@@ -33,6 +33,7 @@ jobs:
       - name: Setup SSH key
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./deploy_key.pem
+          chmod 600 ./deploy_key.pem
 
       - name: Transfer plugin to server via SCP
         if: github.ref == 'refs/heads/main'

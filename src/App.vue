@@ -80,6 +80,14 @@ const deleteHueColor = (index) => {
 // Edit mode state
 const isEditMode = ref(false);
 
+// Advanced settings collapse state (collapsed by default)
+const advancedSettingsExpanded = ref(false);
+
+// Toggle advanced settings
+const toggleAdvancedSettings = () => {
+  advancedSettingsExpanded.value = !advancedSettingsExpanded.value;
+};
+
 // Reset palette
 const resetPalette = () => {
   setPalette(selectedPalette.name);
@@ -236,8 +244,17 @@ watch(error, (newError) => {
           </div>
         </section>
 
+        <!-- Advanced Settings Button -->
+        <button 
+          class="advanced-settings-btn" 
+          @click="toggleAdvancedSettings"
+        >
+          {{ advancedSettingsExpanded ? 'Hide Advanced Settings' : 'Show Advanced Settings' }}
+        </button>
+        
         <!-- Processing Controls -->
-        <section class="section">
+        <section v-if="advancedSettingsExpanded" class="section">
+          <h3>Advanced Settings</h3>
           <div class="setting-group">
             <label>Hue Threshold (degrees)</label>
             <input 
@@ -275,7 +292,6 @@ watch(error, (newError) => {
               When enabled, all colors will be mapped to the luminance palette without using the hue palette.
             </div>
           </div>
-
         </section>
 
         <button 
@@ -606,4 +622,19 @@ watch(error, (newError) => {
   border-color: #ff4444;
 }
 
+.advanced-settings-btn {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.advanced-settings-btn:hover {
+  background-color: #e6e6e6;
+}
 </style>

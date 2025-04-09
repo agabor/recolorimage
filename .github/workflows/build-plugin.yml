@@ -30,21 +30,29 @@ jobs:
       - name: Build WordPress plugin
         run: npm run build:plugin
  
-      - name: Upload plugin artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: recolorimage-plugin
-          path: plugin-build/recolorimage.zip
-          if-no-files-found: error
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key.pem
+          chmod 600 ~/.ssh/deploy_key.pem
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      #- name: Update Plugin 
-      #  if: github.ref == 'refs/heads/main'
-      #  run: curl "https://recolorimage.com/wp-json/git-updater/v1/update/?key=${{ secrets.GIT_UPDATER_KEY }}7&plugin=recolorimage&branch=main"
+      - name: Transfer plugin to server via SCP
+        run: |
+          scp -i ~/.ssh/deploy_key.pem plugin-build/recolorimage.zip agabor@${{ secrets.SERVER_IP }}:/tmp/recolorimage.zip
         
-      #- name: Purge Cloudflare Cache
-      #  if: github.ref == 'refs/heads/main'
-      #  run: |
-      #    curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
-      #         -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-      #         -H "Content-Type:application/json" \
-      #         --data '{"purge_everything":true}'
+      - name: Install plugin using WP CLI
+        run: |
+          ssh -i ~/.ssh/deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
+            wp plugin delete recolorimage --path=/var/www/recolorimage || true
+            wp plugin install /tmp/recolorimage.zip --activate --path=/var/www/recolorimage
+            rm /tmp/recolorimage.zip
+          '
+
+      - name: Purge Cloudflare Cache
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+               -H "Content-Type:application/json" \
+               --data '{"purge_everything":true}'

@@ -37,12 +37,12 @@ jobs:
       - name: Transfer plugin to server via SCP
         if: github.ref == 'refs/heads/main'
         run: |
-          scp -i ./deploy_key.pem plugin-build/recolorimage.zip agabor@${{ secrets.SERVER_IP }}:/tmp/recolorimage.zip
+          scp -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem plugin-build/recolorimage.zip agabor@${{ secrets.SERVER_IP }}:/tmp/recolorimage.zip
         
       - name: Install plugin using WP CLI
         if: github.ref == 'refs/heads/main'
         run: |
-          ssh -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
+          ssh -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
             wp plugin delete recolorimage --path=/var/www/recolorimage || true
             wp plugin install /tmp/recolorimage.zip --activate --path=/var/www/recolorimage
             rm /tmp/recolorimage.zip

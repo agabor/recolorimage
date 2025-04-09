@@ -25,3 +25,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Update Plugin 
+        run: curl "https://recolorimage.com/wp-json/git-updater/v1/update/?key=${{ secrets.GIT_UPDATER_KEY }}7&plugin=recolorimage&branch=main"

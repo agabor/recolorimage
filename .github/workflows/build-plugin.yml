@@ -58,7 +58,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           ssh -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
-            wp import /tmp/guide.xml --path=/var/www/recolorimage
+            wp import /tmp/guide.xml --authors=create --path=/var/www/recolorimage
             rm /tmp/guide.xml
           '
           

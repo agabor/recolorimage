@@ -5,3 +5,8 @@ a {
   transition: 0.4s;
   padding: 3px;
 }
+
+.fa-duotone {
+  --fa-primary-color: var(--wp--preset--color--nord-polar-night-3);
+  --fa-secondary-color: var(--wp--preset--color--nord-polar-night-3);
+}

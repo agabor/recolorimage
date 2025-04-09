@@ -1,4 +1,4 @@
-name: Build WordPress Plugin
+name: Update WordPress Site
 
 on:
   push:
@@ -58,7 +58,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           ssh -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
-            wp post update 73 --post_content="$(cat /tmp/guide.html)"
+            wp post update 73 --post_content="$(cat /tmp/guide.html)"  --path=/var/www/recolorimage
             rm /tmp/guide.html
           '
           

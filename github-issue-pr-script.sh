@@ -119,7 +119,7 @@ EOL
 # Use Claude Code to analyze and suggest a solution
 echo -e "\nInvoking Claude Code to analyze the issue and suggest a solution..."
 echo "This may take a few moments..."
-claude "$CLAUDE_PROMPT" > claude_solution.txt
+claude "$CLAUDE_PROMPT" -p > claude_solution.txt
 
 echo -e "\nClaude Code has analyzed the issue. Here's the suggested solution:\n"
 cat claude_solution.txt
@@ -149,7 +149,7 @@ FILE: path/to/file.js
 This will allow me to programmatically apply these changes to the repository.
 EOL
 
-claude "$CLAUDE_PROMPT" > claude_implementation.txt
+claude "$CLAUDE_PROMPT" -p > claude_implementation.txt
 
 # Parse Claude's implementation and apply changes
 echo -e "\nApplying changes suggested by Claude Code..."
@@ -226,7 +226,7 @@ $LINT_OUTPUT
 Please update the code to fix these linting issues.
 EOL
 
-      claude "$CLAUDE_PROMPT" > claude_lint_fix.txt
+      claude "$CLAUDE_PROMPT" -p > claude_lint_fix.txt
       
       echo "Claude Code has suggested lint fixes. Please review claude_lint_fix.txt and apply the changes."
       read -p "Press Enter to continue after applying lint fixes..."

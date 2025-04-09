@@ -171,7 +171,7 @@ const resizeInfo = computed(() => {
     return null;
   }
   
-  return `Resized from ${originalDimensions.value.width}×${originalDimensions.value.height} to ${resizedDimensions.value.width}×${resizedDimensions.value.height}`;
+  return `Resized from ${originalDimensions.value.width}<i class="fa-duotone fa-xmark"></i>${originalDimensions.value.height} to ${resizedDimensions.value.width}<i class="fa-duotone fa-xmark"></i>${resizedDimensions.value.height}`;
 });
 </script>
 

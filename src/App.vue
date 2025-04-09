@@ -151,7 +151,7 @@ watch(error, (newError) => {
                 @click="toggleEditMode"
                 title="Toggle edit mode"
               >
-                <i class="fa-duotone fa-light fa-pencil"></i> Edit Colors
+                <i class="fa-solid fa-pencil"></i> Edit Colors
               </button>
               <button 
                 v-if="isEditMode"
@@ -181,7 +181,7 @@ watch(error, (newError) => {
                     @input="updateLuminanceColor(index, $event.target.value)"
                     class="color-picker"
                   />
-                  <span><i class="fa-duotone fa-light fa-pencil"></i></span>
+                  <span><i class="fa-solid fa-pencil"></i></span>
                 </button>
                 <button 
                   v-if="selectedPalette.luminance.length > 2"
@@ -189,7 +189,7 @@ watch(error, (newError) => {
                   title="Delete color"
                   @click="deleteLuminanceColor(index)"
                 >
-                  <i class="fa-duotone fa-light fa-xmark"></i>
+                  <i class="fa-solid fa-xmark"></i>
                 </button>
               </template>
             </div>
@@ -223,7 +223,7 @@ watch(error, (newError) => {
                     @input="updateHueColor(index, $event.target.value)"
                     class="color-picker"
                   />
-                  <span><i class="fa-duotone fa-light fa-pencil"></i></span>
+                  <span><i class="fa-solid fa-pencil"></i></span>
                 </button>
                 <button 
                   v-if="selectedPalette.hue.length > 1"
@@ -231,7 +231,7 @@ watch(error, (newError) => {
                   title="Delete color"
                   @click="deleteHueColor(index)"
                 >
-                  <i class="fa-duotone fa-light fa-xmark"></i>
+                  <i class="fa-solid fa-xmark"></i>
                 </button>
               </template>
             </div>

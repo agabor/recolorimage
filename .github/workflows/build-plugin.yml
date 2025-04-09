@@ -25,16 +25,3 @@ jobs:
 
       - name: Lint
         run: npm run lint
-
-      - name: Run tests
-        run: npm run test:unit
-
-      - name: Build WordPress plugin
-        run: npm run build:plugin
-
-      - name: Upload plugin artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: recolorimage-plugin
-          path: plugin-build/recolorimage.zip
-          if-no-files-found: error

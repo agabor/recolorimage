@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
 import { minify } from 'terser';
 
 async function minifyWorker() {
@@ -36,7 +35,8 @@ async function minifyWorker() {
     console.log('Worker minified successfully!');
   } catch (error) {
     console.error('Error minifying worker:', error);
-    process.exit(1);
+    // Use a more browser-compatible approach instead of process.exit
+    throw error;
   }
 }
 

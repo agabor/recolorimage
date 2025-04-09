@@ -30,3 +30,4 @@ coverage
 *.tsbuildinfo
 
 plugin-build
+npde_modules

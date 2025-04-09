@@ -548,7 +548,7 @@ function processHuesAndApplyColors(luminanceAdjustedArray, luminancePalette, hue
   
   // Process each pixel
   luminanceAdjustedArray.forEach((pixel, index) => {
-    const [h, s, l] = pixel.hsl;
+    const [h, , l] = pixel.hsl;
     
     // If luminancePaletteOnly is enabled, skip hue mapping and use luminance palette for all pixels
     if (settings.luminancePaletteOnly) {

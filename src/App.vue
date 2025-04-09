@@ -140,8 +140,8 @@ watch(error, (newError) => {
           </div>
         </section>
 
-        <!-- Luminance Palette -->
         <section class="section">
+        <!-- Luminance Palette -->
           <div class="section-header">
             <h3>Luminance Palette</h3>
             <div class="palette-actions">
@@ -194,10 +194,8 @@ watch(error, (newError) => {
               </template>
             </div>
           </div>
-        </section>
 
         <!-- Hue Palette -->
-        <section class="section">
           <h3>Hue Palette <small>(click to enable/disable)</small></h3>
           <div class="hue-swatches">
             <div 
@@ -278,7 +276,9 @@ watch(error, (newError) => {
             </div>
           </div>
 
-          <button 
+        </section>
+
+        <button 
             class="process-btn" 
             @click="handleProcess"
             :disabled="isProcessing || !hasImage"
@@ -286,8 +286,6 @@ watch(error, (newError) => {
             <span v-if="isProcessing">Processing...</span>
             <span v-else>Recolor Image</span>
           </button>
-        </section>
-
         <!-- Output -->
         <section class="section">
           <OutputDisplay 
@@ -316,9 +314,9 @@ watch(error, (newError) => {
 }
 
 .section {
+  border: 2px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  padding: 2rem;
 }
 
 .section h3 {
@@ -499,6 +497,8 @@ watch(error, (newError) => {
   border-radius: 4px;
   border: none;
   cursor: pointer;
+  background-color: var(--wp--preset--color--nord-frost-3);
+  color: var(--wp--preset--color--nord-snow-storm-2);
 }
 
 .process-btn:disabled {

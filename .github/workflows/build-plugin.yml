@@ -48,6 +48,20 @@ jobs:
             wp plugin install /tmp/recolorimage.zip --activate --path=/var/www/recolorimage
             rm /tmp/recolorimage.zip
           '
+          
+      - name: Transfer guide.xml to server via SCP
+        if: github.ref == 'refs/heads/main'
+        run: |
+          scp -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem guide.xml agabor@${{ secrets.SERVER_IP }}:/tmp/guide.xml
+          
+      - name: Import guide.xml to WordPress
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
+            wp import /tmp/guide.xml --path=/var/www/recolorimage
+            rm /tmp/guide.xml
+          '
+          
       - name: Clean up
         if: github.ref == 'refs/heads/main'
         run: |

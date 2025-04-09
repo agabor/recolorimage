@@ -25,7 +25,7 @@ const handleDownload = () => {
 const imageDimensions = computed(() => {
   if (!props.imageInfo) return '';
   
-  return `${props.imageInfo.width} <i class="fa-duotone fa-xmark"></i> ${props.imageInfo.height}`;
+  return `${props.imageInfo.width} <i class="fa-duotone fa-light fa-xmark"></i> ${props.imageInfo.height}`;
 });
 </script>
 

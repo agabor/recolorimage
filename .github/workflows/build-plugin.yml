@@ -52,14 +52,14 @@ jobs:
       - name: Transfer guide.xml to server via SCP
         if: github.ref == 'refs/heads/main'
         run: |
-          scp -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem guide.xml agabor@${{ secrets.SERVER_IP }}:/tmp/guide.xml
+          scp -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem guide.html agabor@${{ secrets.SERVER_IP }}:/tmp/guide.html
           
       - name: Import guide.xml to WordPress
         if: github.ref == 'refs/heads/main'
         run: |
           ssh -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
-            wp import /tmp/guide.xml --authors=create --path=/var/www/recolorimage
-            rm /tmp/guide.xml
+            wp post update 73 --post_content="$(cat /tmp/guide.html)"
+            rm /tmp/guide.html
           '
           
       - name: Clean up

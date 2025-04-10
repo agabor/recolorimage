@@ -330,9 +330,10 @@ watch(error, (newError) => {
 }
 
 .section {
-  border: 2px solid #ccc;
+  border: 2px solid var(--wp--preset--color--nord-snow-storm-0);
   border-radius: 8px;
   padding: 2rem;
+  background-color: var(--wp--preset--color--nord-snow-storm-1);
 }
 
 .section h3 {
@@ -428,13 +429,6 @@ watch(error, (newError) => {
   padding: 0;
   border: none;
   cursor: pointer;
-}
-
-.color-text {
-  flex: 1;
-  padding: 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #ccc;
 }
 
 .remove-color-btn {

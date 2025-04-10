@@ -217,14 +217,14 @@ const resizeInfo = computed(() => {
 
 <style scoped>
 .dropzone {
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--wp--preset--color--nord-snow-storm-0);
   border-radius: 8px;
   padding: 2rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  background-color: #f9f9f9;
+  background-color: var(--wp--preset--color--nord-snow-storm-2);
   min-height: 200px;
   display: flex;
   align-items: center;

@@ -1,7 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
 import ImageUploader from './components/ImageUploader.vue';
-import OutputDisplay from './components/OutputDisplay.vue';
 import { useImageProcessing } from './composables/useImageProcessing';
 import { DEFAULT_PALETTES } from './utils/colorUtils';
 import chroma from 'chroma-js';
@@ -132,7 +131,10 @@ watch(error, (newError) => {
         <section class="section">
           <ImageUploader 
             :is-processing="isProcessing" 
+            :processed-image-url="processedImageUrl"
+            :has-processed-image="hasProcessedImage"
             @file-selected="handleFileSelected"
+            @download="handleDownload"
           />
         </section>
         
@@ -302,15 +304,6 @@ watch(error, (newError) => {
             <span v-if="isProcessing">Processing...</span>
             <span v-else>Recolor Image</span>
           </button>
-        <!-- Output -->
-        <section class="section">
-          <OutputDisplay 
-            :processed-image-url="processedImageUrl"
-            :image-info="imageInfo"
-            :has-processed-image="hasProcessedImage"
-            @download="handleDownload"
-          />
-        </section>
       </div>
   </div>
 </template>

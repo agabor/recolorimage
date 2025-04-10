@@ -6,15 +6,24 @@ const imageUrl = ref(null);
 const wasResized = ref(false);
 const originalDimensions = ref(null);
 const resizedDimensions = ref(null);
+const showOutputImage = ref(true);
 
 const props = defineProps({
   isProcessing: {
     type: Boolean,
     default: false
+  },
+  processedImageUrl: {
+    type: String,
+    default: null
+  },
+  hasProcessedImage: {
+    type: Boolean,
+    default: false
   }
 });
 
-const emit = defineEmits(['file-selected']);
+const emit = defineEmits(['file-selected', 'download']);
 
 const dragActive = ref(false);
 const fileInput = ref(null);
@@ -148,10 +157,15 @@ const clearImage = () => {
   wasResized.value = false;
   originalDimensions.value = null;
   resizedDimensions.value = null;
+  showOutputImage.value = false;
   if (imageUrl.value) {
     URL.revokeObjectURL(imageUrl.value);
     imageUrl.value = null;
   }
+};
+
+const handleDownload = () => {
+  emit('download');
 };
 
 const triggerFileInput = () => {
@@ -196,14 +210,47 @@ const resizeInfo = computed(() => {
       <div v-if="isProcessing" class="processing-overlay">
         <span>Processing...</span>
       </div>
-      <div v-else-if="imageUrl" class="image-preview">
-        <img :src="imageUrl" alt="Selected image" />
-        <div v-if="wasResized" class="resize-notification">
+      <div v-else-if="imageUrl || (props.hasProcessedImage && showOutputImage)" class="image-preview">
+        <div v-if="props.hasProcessedImage && props.processedImageUrl" class="image-toggle">
+          <button 
+            class="toggle-button" 
+            :class="{ active: !showOutputImage }" 
+            @click.stop="showOutputImage = false"
+          >
+            Input
+          </button>
+          <button 
+            class="toggle-button" 
+            :class="{ active: showOutputImage }" 
+            @click.stop="showOutputImage = true"
+          >
+            Output
+          </button>
+        </div>
+        <img 
+          :src="showOutputImage && props.processedImageUrl ? props.processedImageUrl : imageUrl" 
+          :alt="showOutputImage ? 'Processed image' : 'Selected image'" 
+        />
+        <div v-if="wasResized && !showOutputImage" class="resize-notification">
           {{ resizeInfo }}
         </div>
-        <button class="clear-button" @click.stop="clearImage">
-          Clear Image
-        </button>
+        <div class="image-actions">
+          <button class="clear-button" @click.stop="clearImage">
+            Clear Image
+          </button>
+          <button 
+            v-if="showOutputImage && props.hasProcessedImage"
+            class="download-button" 
+            @click.stop="handleDownload"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download
+          </button>
+        </div>
       </div>
       <div v-else>
         <i class="fa-duotone fa-light fa-cloud-arrow-up upload-icon"></i>
@@ -313,20 +360,73 @@ const resizeInfo = computed(() => {
   color: #856404;
 }
 
-.clear-button {
+.image-actions {
   position: absolute;
   top: 10px;
   right: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.clear-button, .download-button {
   padding: 8px 16px;
-  background-color: #ff4444;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.clear-button {
+  background-color: #ff4444;
 }
 
 .clear-button:hover {
   background-color: #cc0000;
+}
+
+.download-button {
+  background-color: #4CAF50;
+}
+
+.download-button:hover {
+  background-color: #45a049;
+}
+
+.image-toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.toggle-button {
+  padding: 8px 16px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-button.active {
+  background-color: var(--wp--preset--color--nord-frost-3);
+  color: white;
+  border-color: var(--wp--preset--color--nord-frost-3);
+}
+
+.toggle-button:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.toggle-button:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 </style>

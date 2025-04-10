@@ -1,9 +1,10 @@
 import './assets/main.css'
 
 import { createSSRApp } from 'vue'
-//import { renderToString } from 'vue/server-renderer'
 import App from './App.vue'
 
-let app = createSSRApp(App);
-//console.log(renderToString(app));
-app.mount('.app')
+// Create the SSR app for client-side mounting
+const app = createSSRApp(App);
+
+// Mount the app in the browser
+app.mount('.app');

@@ -332,7 +332,7 @@ watch(error, (newError) => {
 
 .button {
   background: var(--wp--preset--color--nord-snow-storm-1);
-  border: 1px solid var(--wp--preset--color--nord-snow-storm-0);
+  border: 1px solid var(--wp--preset--color--nord-snow-storm-2);
 }
 
 .section {
@@ -618,7 +618,7 @@ watch(error, (newError) => {
   padding: 0.5rem;
   margin-bottom: 1rem;
   border-radius: 4px;
-  background-color: #f5f5f5;
+  background-color: var(--wp--preset--color--nord-snow-storm-0) important;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;

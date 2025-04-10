@@ -6,22 +6,26 @@
 	"scripts": {
 		"dev": "vite",
 		"minify-worker": "node minify-worker.js",
-		"build": "vite build && npm run minify-worker",
-		"build:plugin": "rm -rf dist && rm -rf plugin-build && vite build && npm run minify-worker && mkdir -p plugin-build/recolorimage && cp -r dist recolorimage.php wordpress-plugin-readme.md plugin-build/recolorimage/ && cd plugin-build && zip -r recolorimage.zip recolorimage && rm -rf recolorimage",
+		"prerender": "node prerender.js",
+		"build:client": "vite build",
+		"build": "npm run build:client && npm run minify-worker && npm run prerender",
+		"build:plugin": "rm -rf dist && rm -rf plugin-build && npm run build && mkdir -p plugin-build/recolorimage && cp -r dist recolorimage.php wordpress-plugin-readme.md plugin-build/recolorimage/ && cd plugin-build && zip -r recolorimage.zip recolorimage && rm -rf recolorimage",
 		"preview": "vite preview",
 		"test:unit": "vitest",
 		"lint": "eslint . --fix",
 		"format": "prettier --write src/"
 	},
 	"dependencies": {
+		"@vitejs/plugin-vue-jsx": "^4.1.2",
+		"@vue/server-renderer": "^3.5.13",
 		"chroma-js": "^3.1.2",
 		"terser": "^5.39.0",
+		"vite-plugin-ssr": "^0.4.142",
 		"vue": "^3.5.13"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.20.0",
 		"@vitejs/plugin-vue": "^5.2.1",
-		"marked": "^15.0.8",
 		"@vitest/eslint-plugin": "1.1.31",
 		"@vue/eslint-config-prettier": "^10.2.0",
 		"@vue/test-utils": "^2.4.6",
@@ -29,6 +33,7 @@
 		"eslint": "^9.20.1",
 		"eslint-plugin-vue": "^9.32.0",
 		"jsdom": "^26.0.0",
+		"marked": "^15.0.8",
 		"prettier": "^3.5.1",
 		"vite": "^6.2.5",
 		"vite-plugin-vue-devtools": "^7.7.2",

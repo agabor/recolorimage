@@ -57,6 +57,22 @@ class RecolorImages {
 
     public function render_shortcode($atts) {
         $this->shortcode_used = true;
+        
+        // Get the pre-rendered HTML from the index.html file
+        $html_file = plugin_dir_path(__FILE__) . 'dist/index.html';
+        
+        if (file_exists($html_file)) {
+            $html_content = file_get_contents($html_file);
+            
+            // Extract just the app div with its pre-rendered content
+            preg_match('/<div id="recolorimage-app">(.*?)<\/div>/s', $html_content, $matches);
+            
+            if (!empty($matches[0])) {
+                return $matches[0];
+            }
+        }
+        
+        // Fallback to empty div if pre-rendered HTML is not available
         return '<div id="recolorimage-app"></div>';
     }
 }

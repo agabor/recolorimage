@@ -331,8 +331,13 @@ watch(error, (newError) => {
 
 
 .button {
-  background: var(--wp--preset--color--nord-snow-storm-1);
-  border: 1px solid var(--wp--preset--color--nord-snow-storm-2);
+  background: var(--wp--preset--color--nord-snow-storm-2);
+  border: 1px solid var(--wp--preset--color--nord-snow-storm-0);
+}
+
+
+.button:hover {
+  background: var(--wp--preset--color--nord-snow-storm-0);
 }
 
 .section {
@@ -547,10 +552,6 @@ watch(error, (newError) => {
   z-index: 2;
 }
 
-.edit-color-btn:hover {
-  background: #f0f0f0;
-}
-
 .color-picker {
   position: absolute;
   width: 100%;
@@ -571,24 +572,12 @@ watch(error, (newError) => {
   transition: all 0.2s ease;
 }
 
-.edit-mode-btn.active {
-  background-color: #e6e6e6;
-  border-color: #999;
-}
-
-.edit-mode-btn:hover {
-  background-color: #f0f0f0;
-}
 
 .reset-btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.reset-btn:hover {
-  background-color: #f0f0f0;
 }
 
 .delete-color-btn {
@@ -604,13 +593,8 @@ watch(error, (newError) => {
   justify-content: center;
   padding: 0;
   font-size: 14px;
-  color: #ff4444;
+  color: var(--wp--preset--color--nord-aurora-red);
   z-index: 2;
-}
-
-.delete-color-btn:hover {
-  background: #fff0f0;
-  border-color: #ff4444;
 }
 
 .advanced-settings-btn {
@@ -622,9 +606,5 @@ watch(error, (newError) => {
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
-}
-
-.advanced-settings-btn:hover {
-  background-color: #e6e6e6;
 }
 </style>

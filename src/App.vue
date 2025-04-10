@@ -140,7 +140,7 @@ watch(error, (newError) => {
         <section class="section">
           <div class="palette-selector">
             <label for="palette-select">Select Palette:</label>
-            <select id="palette-select" v-model="selectedPalette.name" @change="handlePaletteUpdate($event.target.value)">
+            <select id="palette-select" class="button" v-model="selectedPalette.name" @change="handlePaletteUpdate($event.target.value)">
               <option v-for="palette in Object.keys(DEFAULT_PALETTES)" :key="palette" :value="palette">
                 {{ palette.charAt(0).toUpperCase() + palette.slice(1) }}
               </option>
@@ -154,7 +154,7 @@ watch(error, (newError) => {
             <h3>Luminance Palette</h3>
             <div class="palette-actions">
               <button 
-                class="edit-mode-btn" 
+                class="edit-mode-btn button" 
                 :class="{ active: isEditMode }" 
                 @click="toggleEditMode"
                 title="Toggle edit mode"
@@ -163,7 +163,7 @@ watch(error, (newError) => {
               </button>
               <button 
                 v-if="isEditMode"
-                class="reset-btn" 
+                class="reset-btn button" 
                 @click="resetPalette"
                 title="Reset to original colors"
               >
@@ -180,7 +180,7 @@ watch(error, (newError) => {
               <div class="color-display" :style="{ backgroundColor: color.hex() }"></div>
               <template v-if="isEditMode">
                 <button 
-                  class="edit-color-btn" 
+                  class="edit-color-btn button" 
                   title="Edit color"
                 >
                   <input 
@@ -193,7 +193,7 @@ watch(error, (newError) => {
                 </button>
                 <button 
                   v-if="selectedPalette.luminance.length > 2"
-                  class="delete-color-btn" 
+                  class="delete-color-btn button" 
                   title="Delete color"
                   @click="deleteLuminanceColor(index)"
                 >
@@ -220,7 +220,7 @@ watch(error, (newError) => {
               <div class="color-display" :style="{ backgroundColor: color.hex() }"></div>
               <template v-if="isEditMode">
                 <button 
-                  class="edit-color-btn" 
+                  class="edit-color-btn button" 
                   title="Edit color"
                 >
                   <input 
@@ -233,7 +233,7 @@ watch(error, (newError) => {
                 </button>
                 <button 
                   v-if="selectedPalette.hue.length > 1"
-                  class="delete-color-btn" 
+                  class="delete-color-btn button" 
                   title="Delete color"
                   @click="deleteHueColor(index)"
                 >
@@ -246,7 +246,7 @@ watch(error, (newError) => {
 
         <!-- Advanced Settings Button -->
         <button 
-          class="advanced-settings-btn" 
+          class="advanced-settings-btn button" 
           @click="toggleAdvancedSettings"
         >
           {{ advancedSettingsExpanded ? 'Hide Advanced Settings' : 'Show Advanced Settings' }}
@@ -329,6 +329,12 @@ watch(error, (newError) => {
   gap: 1.5rem;
 }
 
+
+.button {
+  background: var(--wp--preset--color--nord-snow-storm-1);
+  border: 1px solid var(--wp--preset--color--nord-snow-storm-0);
+}
+
 .section {
   border: 2px solid var(--wp--preset--color--nord-snow-storm-0);
   border-radius: 8px;
@@ -349,7 +355,6 @@ watch(error, (newError) => {
 .palette-selector select {
   padding: 0.5rem;
   border-radius: 4px;
-  border: 1px solid #ccc;
 }
 
 .luminance-swatches,
@@ -532,8 +537,6 @@ watch(error, (newError) => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: white;
-  border: 1px solid #ccc;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -564,8 +567,6 @@ watch(error, (newError) => {
 .edit-mode-btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  border: 1px solid #ccc;
-  background-color: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -582,8 +583,6 @@ watch(error, (newError) => {
 .reset-btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  border: 1px solid #ccc;
-  background-color: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -599,8 +598,6 @@ watch(error, (newError) => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: white;
-  border: 1px solid #ccc;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -621,7 +618,6 @@ watch(error, (newError) => {
   padding: 0.5rem;
   margin-bottom: 1rem;
   border-radius: 4px;
-  border: 1px solid #ccc;
   background-color: #f5f5f5;
   cursor: pointer;
   transition: all 0.2s ease;

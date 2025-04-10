@@ -8,9 +8,10 @@
  */
 
 import fs from 'fs';
-import path from 'path';
 import { marked } from 'marked';
 import { JSDOM } from 'jsdom';
+
+/* global process */
 
 // Always use JSDOM since we've imported it
 const useJsdom = true;
@@ -79,7 +80,7 @@ function convertElementToWpBlock(element) {
     case 'h3':
     case 'h4':
     case 'h5':
-    case 'h6':
+    case 'h6': {
       // Get original level and increase by 1 (make one level deeper)
       const originalLevel = parseInt(tagName.charAt(1));
       // Cap at h6 (don't try to create h7)
@@ -87,6 +88,7 @@ function convertElementToWpBlock(element) {
       const newTag = `h${newLevel}`;
       
       return `<!-- wp:heading {"level":${newLevel}} -->\n<${newTag}>${element.innerHTML}</${newTag}>\n<!-- /wp:heading -->\n\n`;
+    }
       
     case 'ul':
       return `<!-- wp:list -->\n${element.outerHTML}\n<!-- /wp:list -->\n\n`;
@@ -94,13 +96,14 @@ function convertElementToWpBlock(element) {
     case 'ol':
       return `<!-- wp:list {"ordered":true} -->\n${element.outerHTML}\n<!-- /wp:list -->\n\n`;
       
-    case 'pre':
+    case 'pre': {
       // Handle code blocks
       const code = element.querySelector('code');
       const language = code && code.className ? code.className.replace('language-', '') : '';
       const codeContent = code ? code.innerHTML : element.innerHTML;
       
       return `<!-- wp:code ${language ? `{"language":"${language}"}` : ''} -->\n<pre class="wp-block-code">${language ? `<code class="language-${language}">` : '<code>'}${codeContent}${language ? '</code>' : '</code>'}</pre>\n<!-- /wp:code -->\n\n`;
+    }
       
     case 'blockquote':
       return `<!-- wp:quote -->\n${element.outerHTML}\n<!-- /wp:quote -->\n\n`;
@@ -111,7 +114,7 @@ function convertElementToWpBlock(element) {
     case 'table':
       return `<!-- wp:table -->\n${element.outerHTML}\n<!-- /wp:table -->\n\n`;
       
-    case 'figure':
+    case 'figure': {
       const img = element.querySelector('img');
       if (img) {
         const src = img.getAttribute('src');
@@ -122,6 +125,7 @@ function convertElementToWpBlock(element) {
         return `<!-- wp:image -->\n<figure class="wp-block-image"><img src="${src}" alt="${alt}"/>${captionText ? `<figcaption>${captionText}</figcaption>` : ''}</figure>\n<!-- /wp:image -->\n\n`;
       }
       return `<!-- wp:html -->\n${element.outerHTML}\n<!-- /wp:html -->\n\n`;
+    }
       
     default:
       // For any other elements, wrap them in a HTML block

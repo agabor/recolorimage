@@ -1,34 +1,49 @@
 # Image Recolor
 
-Recolor images online to fit your website's color scheme! Upload any image, set your websites color palette, and hit recolor.
+Recolor images online to match your website's color scheme! Simply upload any image, select your color palette, and click the recolor button.
 
-# Luminance and Hue Palette
+## How It Works
 
-s you can see in the app we use two separate palettes for coloring the image, the luminance (or grayscale) and the hue (or color) palette. The recoloring process adjusts the lightness of each pixel to the luminance palette, and the color will be adjusted based on the hue palette. Pixels that do not have a matching color (within a threshold) on the hue palette will be left grayscale. The term grayscale might be a bit missleading, as the luminance palette can have a color component (for example [Sepia](https://en.wikipedia.org/wiki/Sepia_(color))) if tha lightness value varies.
+The app uses two separate color palettes to transform your images:
 
-# Improving the result
-If you have recolored an image and you are not completly satisfied with the result, you can try disablein colors from your hue palette by clicking on them. This will force the algorithm to use an other color instead.
+1. **Luminance Palette** - Controls the brightness levels in your image
+2. **Hue Palette** - Determines the actual colors used in your image
 
-# Advanced Settings
+When you recolor an image, the app adjusts each pixel in two ways:
+- The brightness of each pixel is mapped to your luminance palette
+- The color of each pixel is matched to the closest color in your hue palette
 
-The application provides advanced settings that allow you to fine-tune the recoloring process:
+Pixels that don't closely match any color in your hue palette will use colors from the luminance palette instead. Note that the luminance palette can include color variations (like [Sepia](https://en.wikipedia.org/wiki/Sepia_(color))), not just pure grayscale.
 
-## Hue Threshold (degrees)
-This setting controls how close a pixel's hue needs to be to a color in your hue palette to be considered a match. 
-- Higher values (up to 180°) will match more pixels to your hue palette colors, resulting in more colorful images
-- Lower values (closer to 1°) require more exact matches, resulting in fewer colored pixels and more grayscale areas
-- Default: 60°
+## Improving Your Results
 
-## Grayscale Threshold
-This determines how colorful a pixel needs to be to not be considered grayscale.
-- Higher values treat more pixels as grayscale (even somewhat colorful ones)
-- Lower values only treat truly gray/black/white pixels as grayscale
-- Default: 30
+If you're not completely satisfied with how your image looks after recoloring, try these tips:
 
-## Use Luminance Palette Only
-When enabled, this option maps all pixels to your luminance palette without using the hue palette.
-- Useful for creating monochromatic or duotone effects
-- The resulting image will follow the color scheme of your luminance palette
-- All color information from the original image is discarded
+- **Disable specific colors**: Click on any color in your hue palette to disable it. This forces the app to use other colors instead.
+- **Adjust the advanced settings**: Fine-tune the recoloring process using the advanced options described below.
 
-To access these settings, click the "Show Advanced Settings" button below the color palettes.
+## Advanced Settings
+
+Click the "Show Advanced Settings" button below the color palettes to access these options:
+
+### Hue Threshold (degrees)
+Controls how closely a pixel's color must match your hue palette to use that color.
+
+- **Higher values** (up to 180°): More pixels will match your hue palette colors, creating more colorful images
+- **Lower values** (closer to 1°): Requires closer color matches, resulting in more grayscale areas
+- **Default**: 60°
+
+### Grayscale Threshold
+Determines which pixels are treated as having no color (grayscale).
+
+- **Higher values**: More pixels are treated as grayscale, even somewhat colorful ones
+- **Lower values**: Only truly gray/black/white pixels are treated as grayscale
+- **Default**: 30
+
+### Use Luminance Palette Only
+When enabled, this option ignores the hue palette completely.
+
+- Creates monochromatic or duotone effects
+- The image will follow only the color scheme of your luminance palette
+- All original color information is discarded
+- Useful for creating stylized, limited-color images

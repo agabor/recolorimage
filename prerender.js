@@ -49,10 +49,10 @@ async function prerender() {
       `<div id="recolorimage-app">${appHtml}</div>`
     );
     
-    // Replace the script tag to point to the built JS file
+    // Remove the script tag completely since WordPress will handle script loading
     html = html.replace(
       '<script type="module" src="/src/main.js"></script>',
-      '<script type="module" src="/assets/index.js"></script>'
+      ''
     );
     
     // Ensure the output directory exists

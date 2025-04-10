@@ -93,6 +93,8 @@ public function render_shortcode($atts) {
 }
 ```
 
+**Important Note**: The pre-rendering process removes the script tag from the HTML, as WordPress handles loading the JavaScript file through its enqueue system. This ensures that the JavaScript file is loaded correctly with the proper path in the WordPress environment.
+
 ### 6. Build Process
 
 The build process was updated to include pre-rendering:

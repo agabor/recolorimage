@@ -1,4 +1,4 @@
-# Image Recolor
+# Recolor Image - User Guide
 
 Recolor images online to match your website's color scheme! Simply upload any image, select your color palette, and click the recolor button.
 

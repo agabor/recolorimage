@@ -7,8 +7,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` - Build application and minify worker script
 - `npm run build:plugin` - Build WordPress plugin package
 - `npm run lint` - Run ESLint with auto-fix
-- `npm run format` - Format code with Prettier
-- `npm run test:unit` - Run Vitest unit tests
 
 ## Code Style Guidelines
 - **Vue Components**: Use Vue 3 Composition API with `<script setup>` syntax
@@ -30,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before solving any issues or implementing features, Claude should:
 
-1. **Read the README.md file completely** to understand:
+1. **Read the DEVELOPMENT.md file completely** to understand:
    - Project purpose and architecture
    - Installation and setup instructions
    - Coding standards and conventions
@@ -44,11 +42,11 @@ Before solving any issues or implementing features, Claude should:
 
 When resolving issues:
 
-1. Always start by reading the README.md to understand the context of the project.
+1. Always start by reading the DEVELOPMENT.md to understand the context of the project.
 2. Review the issue description thoroughly.
-3. Determine if the issue requires README.md updates:
-   - For feature additions or API changes, README.md updates are required
-   - For bug fixes or minor changes, README.md updates may not be necessary
+3. Determine if the issue requires DEVELOPMENT.md updates:
+   - For feature additions or API changes, DEVELOPMENT.md updates are required
+   - For bug fixes or minor changes, DEVELOPMENT.md updates may not be necessary
 4. Run linting tools before creating pull requests.
 5. Write tests for new features or bug fixes when applicable.
 
@@ -58,13 +56,13 @@ All pull requests should:
 
 1. Reference the issue number
 2. Include a clear description of changes made
-3. Mention whether README.md was updated and why/why not
+3. Mention whether DEVELOPMENT.md was updated and why/why not
 4. Pass all linting checks
 5. Include relevant tests (if applicable)
 
 ## Example Issue Resolution Process
 
-1. Read README.md for project context
+1. Read DEVELOPMENT.md for project context
 2. Analyze the issue
 3. Implement solution following project conventions
 4. Update documentation if needed

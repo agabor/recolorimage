@@ -6,4 +6,4 @@ import App from './App.vue'
 
 let app = createSSRApp(App);
 //console.log(renderToString(app));
-app.mount('#recolorimage-app')
+app.mount('.app')

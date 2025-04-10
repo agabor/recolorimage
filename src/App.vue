@@ -11,7 +11,6 @@ const {
   error,
   hasImage,
   hasProcessedImage,
-  imageInfo,
   settings,
   selectedPalette,
   matchedPaletteStats,

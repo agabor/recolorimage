@@ -49,17 +49,20 @@ jobs:
             rm /tmp/recolorimage.zip
           '
           
-      - name: Transfer guide.xml to server via SCP
+      - name: Generate WordPress HTML from README.md
+        run: node md-to-wp.js README.md readme-wp.html
+          
+      - name: Transfer README WordPress HTML to server via SCP
         if: github.ref == 'refs/heads/main'
         run: |
-          scp -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem guide.html agabor@${{ secrets.SERVER_IP }}:/tmp/guide.html
+          scp -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem readme-wp.html agabor@${{ secrets.SERVER_IP }}:/tmp/readme-wp.html
           
-      - name: Import guide.xml to WordPress
+      - name: Import README WordPress HTML to WordPress
         if: github.ref == 'refs/heads/main'
         run: |
           ssh -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
-            wp post update 73 --post_content="$(cat /tmp/guide.html)"  --path=/var/www/recolorimage
-            rm /tmp/guide.html
+            wp post update 73 --post_content="$(cat /tmp/readme-wp.html)"  --path=/var/www/recolorimage
+            rm /tmp/readme-wp.html
           '
           
       - name: Clean up

@@ -522,12 +522,27 @@ function adjustLuminanceRange(hslArray, luminancePalette, outlierPercentage) {
       const scaleFactor = paletteRangeWidth / inputRangeWidth;
       adjustedL = paletteRange.min + (l - inputRange.min) * scaleFactor;
     } else {
-      // Shift (no scaling up)
-      // Center the input range within the palette range
-      const shift = (paletteRange.min + paletteRange.max - inputRange.min - inputRange.max) / 2;
-      adjustedL = l + shift;
+      // Check if input range is already inside palette range
+      if (inputRange.min >= paletteRange.min && inputRange.max <= paletteRange.max) {
+        // Input range is already inside palette range, do nothing
+        adjustedL = l;
+      } else {
+        // Calculate minimum shift needed to fit input range inside palette range
+        let shift = 0;
+        
+        // If input min is below palette min, shift up
+        if (inputRange.min < paletteRange.min) {
+          shift = paletteRange.min - inputRange.min;
+        }
+        // If input max is above palette max, shift down
+        else if (inputRange.max > paletteRange.max) {
+          shift = paletteRange.max - inputRange.max;
+        }
+        
+        adjustedL = l + shift;
+      }
       
-      // Clamp to palette range
+      // Ensure we're within palette range (this should only affect edge cases)
       adjustedL = Math.max(paletteRange.min, Math.min(paletteRange.max, adjustedL));
     }
     

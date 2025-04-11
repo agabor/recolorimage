@@ -68,6 +68,10 @@ The Vue.js application is implemented as modular components and composables for 
     - Hue: Frost (blue accents) and Aurora (colorful accents)
   - Pre-defined alternative palettes (defined in `recolorimages/src/utils/colorUtils.js`)
   - Custom palette creation with color pickers for both palette types
+  - WordPress palette import (implemented in `recolorimages/src/components/WPPaletteModal.vue`)
+    - Fetch color palettes from any WordPress site
+    - Extract and group colors into palettes based on naming patterns
+    - Two-step selection process for luminance and hue palettes
 
 ### 3. Processing Controls
 **Implemented in**: `recolorimages/src/components/ProcessingControls.vue`
@@ -181,6 +185,37 @@ The Vue.js application is implemented as modular components and composables for 
    - Hue distance threshold: 60 (in degrees)
    - Outlier percentage: 5%
    - Default color count: 8
+
+## WordPress Palette Import Feature
+
+### Implementation Details
+**Implemented in**: 
+- `recolorimages/src/components/WPPaletteModal.vue` (UI component)
+- `recolorimages/src/utils/colorUtils.js` (fetchWordPressColorPalettes function)
+
+#### 1. Fetching WordPress Palettes
+- Uses a proxy endpoint on recolorimage.com to avoid CORS issues
+- Extracts CSS variables from the WordPress site's global styles
+- Groups colors into palettes based on naming patterns (e.g., `primary-0`, `primary-1`)
+- Requires at least 2 colors to form a valid palette
+
+#### 2. Two-Step Selection Process
+- **Step 1: Luminance Palette Selection**
+  - Displays all valid palettes from the WordPress site
+  - Users can select one or more palettes for the luminance palette
+  - Selected palettes are combined and sorted by luminance (dark to light)
+  
+- **Step 2: Hue Palette Selection**
+  - Displays all available colors from the WordPress site (excluding those in the luminance palette)
+  - Filters out colors with low saturation or extreme luminance values
+  - Users can select individual colors for the hue palette
+  - Displays color names when available
+
+#### 3. Integration with Main Application
+- Selected palettes are passed back to the main application
+- The luminance palette is sorted by luminance (dark to light)
+- The hue palette consists of individually selected colors
+- The application then uses these palettes for image processing
 
 ## Development
 

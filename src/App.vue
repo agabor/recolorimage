@@ -169,6 +169,7 @@ watch(error, (newError) => {
               </select>
             </div>
             <button class="wp-import-btn button" @click="showWPModal = true">
+              <i class="fa-brands fa-wordpress"></i>
               Import from WordPress
             </button>
           </div>
@@ -627,6 +628,10 @@ watch(error, (newError) => {
   font-size: 14px;
   color: var(--wp--preset--color--nord-aurora-red);
   z-index: 2;
+}
+
+.wp-import-btn i {
+  margin-right: 0.5rem;
 }
 
 .advanced-settings-btn {

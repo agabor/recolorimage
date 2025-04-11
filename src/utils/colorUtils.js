@@ -1,5 +1,3 @@
-
-
 /**
  * Extracts colors from a CSS gradient string
  * @param {string} gradientStr - CSS gradient string
@@ -100,13 +98,14 @@ function checkGradientLuminance(colors) {
   }
   
   // Convert colors to hex and calculate luminance
-  const colorsWithLuminance = colors.map(color => {
+  const colorsWithLuminance = colors.map((color, index) => {
     const hex = colorToHex(color);
     const luminance = calculateLuminance(hex);
-    console.log(`Color: ${color} -> Hex: ${hex} -> Luminance: ${luminance.toFixed(4)}`);
+    console.log(`Color ${index+1}: ${color} -> Hex: ${hex} -> Luminance: ${luminance.toFixed(4)}`);
     return {
       color: hex,
-      luminance: luminance
+      luminance: luminance,
+      originalIndex: index
     };
   });
   
@@ -122,9 +121,38 @@ function checkGradientLuminance(colors) {
   
   // Check if there's a significant difference in lightness (at least 0.3)
   const SIGNIFICANT_DIFFERENCE = 0.3;
-  const isLuminancePalette = luminanceRange >= SIGNIFICANT_DIFFERENCE;
+  const hasSignificantDifference = luminanceRange >= SIGNIFICANT_DIFFERENCE;
   
   console.log(`Significant difference threshold: ${SIGNIFICANT_DIFFERENCE}`);
+  console.log(`Has significant luminance difference: ${hasSignificantDifference}`);
+  
+  // Check if colors are ordered by luminance (either dark to light or light to dark)
+  let isOrdered = true;
+  let isAscending = null;
+  
+  // Need at least 2 colors to check ordering
+  if (colors.length >= 2) {
+    // Determine direction based on first two colors
+    isAscending = colorsWithLuminance[1].luminance > colorsWithLuminance[0].luminance;
+    console.log(`Gradient direction: ${isAscending ? 'Dark to light' : 'Light to dark'}`);
+    
+    // Check if all colors follow the same direction
+    for (let i = 1; i < colorsWithLuminance.length; i++) {
+      const prev = colorsWithLuminance[i-1].luminance;
+      const curr = colorsWithLuminance[i].luminance;
+      
+      if ((isAscending && curr < prev) || (!isAscending && curr > prev)) {
+        isOrdered = false;
+        break;
+      }
+    }
+  }
+  
+  console.log(`Colors are ordered by luminance: ${isOrdered}`);
+  
+  // A gradient qualifies as a luminance palette if it has significant difference in lightness
+  // and colors are ordered by luminance (either dark to light or light to dark)
+  const isLuminancePalette = hasSignificantDifference && isOrdered;
   console.log(`Is luminance palette: ${isLuminancePalette}`);
   
   // Sort colors by luminance (dark to light)
@@ -137,6 +165,8 @@ function checkGradientLuminance(colors) {
   
   return {
     isLuminancePalette,
+    hasSignificantDifference,
+    isOrdered,
     sortedColors: sortedColors.map(c => c.color)
   };
 }
@@ -198,7 +228,7 @@ export async function fetchWordPressColorPalettes(url) {
       const gradientColors = extractColorsFromGradient(gradientValue);
       
       // Check if the gradient qualifies as a luminance palette
-      const { isLuminancePalette, sortedColors } = checkGradientLuminance(gradientColors);
+      const { isLuminancePalette, hasSignificantDifference, isOrdered, sortedColors } = checkGradientLuminance(gradientColors);
       
       if (isLuminancePalette && sortedColors.length >= 2) {
         console.log(`✅ Gradient "${gradientName}" QUALIFIES as a luminance palette`);
@@ -206,11 +236,12 @@ export async function fetchWordPressColorPalettes(url) {
         gradientVars[gradientName] = sortedColors;
       } else {
         console.log(`❌ Gradient "${gradientName}" does NOT qualify as a luminance palette`);
-        if (!isLuminancePalette) {
-          console.log('   Reason: Not enough luminance difference');
-        }
         if (sortedColors.length < 2) {
           console.log('   Reason: Not enough colors (minimum 2 required)');
+        } else if (!hasSignificantDifference) {
+          console.log('   Reason: Not enough luminance difference');
+        } else if (!isOrdered) {
+          console.log('   Reason: Colors are not ordered by luminance');
         }
       }
     }

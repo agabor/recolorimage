@@ -21,6 +21,29 @@ const selectedHueColors = ref(new Set());
 const step = ref('luminance'); // 'luminance' or 'hue'
 const luminancePalette = ref([]);
 
+// Default grayscale palette
+const grayscalePalette = [
+  '#000000', // Black
+  '#404040', // Dark gray
+  '#808080', // Medium gray
+  '#C0C0C0', // Light gray
+  '#FFFFFF'  // White
+];
+
+// Track if grayscale palette is selected
+const isGrayscaleSelected = ref(false);
+
+// Select grayscale palette
+const selectGrayscalePalette = () => {
+  // Toggle selection
+  isGrayscaleSelected.value = !isGrayscaleSelected.value;
+  
+  // Clear other selections if grayscale is selected
+  if (isGrayscaleSelected.value) {
+    selectedPalettes.value.clear();
+  }
+};
+
 // All colors from WordPress site
 const allColors = computed(() => {
   const colors = [];
@@ -33,6 +56,9 @@ const allColors = computed(() => {
 // Colors available for hue selection (all colors except those in luminance palette, with sufficient saturation, and not too light/dark)
 const availableHueColors = computed(() => {
   if (!luminancePalette.value.length) return [];
+  
+  // If no WordPress palettes are loaded, return an empty array
+  if (Object.keys(palettes.value).length === 0) return [];
   
   // Thresholds
   const MIN_SATURATION = 0.2; // 20% minimum saturation
@@ -113,6 +139,10 @@ const togglePaletteSelection = (name) => {
   if (selectedPalettes.value.has(name)) {
     selectedPalettes.value.delete(name);
   } else {
+    // Clear grayscale selection if a WordPress palette is selected
+    if (isGrayscaleSelected.value) {
+      isGrayscaleSelected.value = false;
+    }
     selectedPalettes.value.add(name);
   }
 };
@@ -128,9 +158,16 @@ const toggleHueColorSelection = (color) => {
 const handleLuminanceConfirm = () => {
   // Combine all selected palettes for luminance
   const allLuminanceColors = [];
-  selectedPalettes.value.forEach(name => {
-    allLuminanceColors.push(...palettes.value[name]);
-  });
+  
+  // Add grayscale palette if selected
+  if (isGrayscaleSelected.value) {
+    allLuminanceColors.push(...grayscalePalette);
+  } else {
+    // Add WordPress palettes if selected
+    selectedPalettes.value.forEach(name => {
+      allLuminanceColors.push(...palettes.value[name]);
+    });
+  }
 
   // Sort colors by luminance (dark to light)
   const sortedColors = allLuminanceColors.sort((a, b) => {
@@ -221,21 +258,16 @@ onMounted(() => {
       </div>
 
       <!-- Luminance Step -->
-      <div v-if="step === 'luminance' && Object.keys(palettes).length > 0" class="palettes-container">
-        <!-- Regular numbered palettes -->
-        <div 
-          v-for="(colors, name) in palettes" 
-          :key="name"
-          class="palette-option"
-          v-show="name !== 'all-colors'"
-        >
+      <div v-if="step === 'luminance'" class="palettes-container">
+        <!-- Default Grayscale Option (always shown) -->
+        <div class="palette-option grayscale-option">
           <h4>
-            {{ name.startsWith('gradient-') ? 'Gradient: ' + name.replace('gradient-', '').replace(/-/g, ' ') : name.replace(/-/g, ' ') }}
-            <span v-if="name.startsWith('gradient-')" class="gradient-badge">Luminance Gradient</span>
+            Grayscale
+            <span class="gradient-badge">Default Option</span>
           </h4>
           <div class="color-preview">
             <div 
-              v-for="(color, index) in colors" 
+              v-for="(color, index) in grayscalePalette" 
               :key="index"
               class="color-swatch"
               :style="{ backgroundColor: color }"
@@ -243,15 +275,45 @@ onMounted(() => {
             ></div>
           </div>
           <button 
-            @click="togglePaletteSelection(name)"
+            @click="selectGrayscalePalette"
             class="select-btn"
-            :class="{ 'selected': selectedPalettes.has(name) }"
+            :class="{ 'selected': isGrayscaleSelected }"
           >
-            {{ selectedPalettes.has(name) ? 'Selected' : 'Select' }}
+            {{ isGrayscaleSelected ? 'Selected' : 'Select' }}
           </button>
         </div>
         
-        <!-- All Colors palette removed from luminance step as per requirements -->
+        <!-- WordPress palettes (shown only when loaded) -->
+        <template v-if="Object.keys(palettes).length > 0">
+          <!-- Regular numbered palettes -->
+          <div 
+            v-for="(colors, name) in palettes" 
+            :key="name"
+            class="palette-option"
+            v-show="name !== 'all-colors'"
+          >
+            <h4>
+              {{ name.startsWith('gradient-') ? 'Gradient: ' + name.replace('gradient-', '').replace(/-/g, ' ') : name.replace(/-/g, ' ') }}
+              <span v-if="name.startsWith('gradient-')" class="gradient-badge">Luminance Gradient</span>
+            </h4>
+            <div class="color-preview">
+              <div 
+                v-for="(color, index) in colors" 
+                :key="index"
+                class="color-swatch"
+                :style="{ backgroundColor: color }"
+                :title="color"
+              ></div>
+            </div>
+            <button 
+              @click="togglePaletteSelection(name)"
+              class="select-btn"
+              :class="{ 'selected': selectedPalettes.has(name) }"
+            >
+              {{ selectedPalettes.has(name) ? 'Selected' : 'Select' }}
+            </button>
+          </div>
+        </template>
       </div>
       
       <!-- Hue Step -->
@@ -273,7 +335,14 @@ onMounted(() => {
           <h4>Available Colors for Hue Palette</h4>
           <p class="selection-hint">Click colors to select/deselect for hue palette</p>
         </div>
-        <div class="hue-colors-grid">
+        
+        <!-- No hue colors available message -->
+        <div v-if="availableHueColors.length === 0" class="no-hue-colors-message">
+          <p>No hue colors available. You can proceed without selecting hue colors, or go back to select WordPress palettes.</p>
+        </div>
+        
+        <!-- Hue colors grid -->
+        <div v-else class="hue-colors-grid">
           <div 
             v-for="(color, index) in availableHueColors" 
             :key="`hue-${index}`"
@@ -299,10 +368,10 @@ onMounted(() => {
       <div class="modal-footer">
         <!-- Luminance step buttons -->
         <button 
-          v-if="step === 'luminance' && Object.keys(palettes).length > 0"
+          v-if="step === 'luminance'"
           @click="handleLuminanceConfirm" 
           class="confirm-btn"
-          :disabled="selectedPalettes.size === 0"
+          :disabled="selectedPalettes.size === 0 && !isGrayscaleSelected"
         >
           Continue to Hue Selection
         </button>
@@ -443,6 +512,18 @@ onMounted(() => {
   padding: 1rem;
 }
 
+.grayscale-option {
+  grid-column: 1 / -1; /* Span all columns */
+  background-color: var(--wp--preset--color--nord-snow-storm-0);
+  border: 2px solid var(--wp--preset--color--nord-frost-3);
+  margin-bottom: 1rem;
+}
+
+.grayscale-option h4 {
+  color: var(--wp--preset--color--nord-frost-3);
+  font-weight: bold;
+}
+
 .all-colors-option {
   grid-column: 1 / -1; /* Span all columns */
   background-color: var(--wp--preset--color--nord-snow-storm-0);
@@ -512,6 +593,20 @@ onMounted(() => {
   background-color: var(--wp--preset--color--nord-snow-storm-0);
   border-radius: 4px;
   margin-bottom: 1.5rem;
+}
+
+.no-hue-colors-message {
+  padding: 1.5rem;
+  background-color: var(--wp--preset--color--nord-snow-storm-0);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--wp--preset--color--nord-polar-night-0);
+}
+
+.no-hue-colors-message p {
+  margin: 0;
+  line-height: 1.5;
 }
 
 .hue-colors-grid {

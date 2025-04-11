@@ -168,10 +168,13 @@ watch(error, (newError) => {
                 </option>
               </select>
             </div>
-            <button class="wp-import-btn button" @click="showWPModal = true">
+
+            <div class="palette-actions">
+            <button class="edit-mode-btn button" @click="showWPModal = true">
               <i class="fa-brands fa-wordpress"></i>
               Import from WordPress
             </button>
+            </div>
           </div>
 
           <!-- WordPress Palette Modal -->

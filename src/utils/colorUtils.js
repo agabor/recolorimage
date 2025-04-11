@@ -1,6 +1,147 @@
 
 
 /**
+ * Extracts colors from a CSS gradient string
+ * @param {string} gradientStr - CSS gradient string
+ * @returns {Array} Array of extracted colors
+ */
+function extractColorsFromGradient(gradientStr) {
+  console.log('Extracting colors from gradient:', gradientStr);
+  
+  // Match all color definitions in the gradient
+  // This regex matches both rgba() and rgb() formats as well as hex colors
+  const colorRegex = /(rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)|#[A-Fa-f0-9]{3,8})/g;
+  const colors = [];
+  let match;
+  
+  while ((match = colorRegex.exec(gradientStr)) !== null) {
+    colors.push(match[1]);
+  }
+  
+  console.log('Extracted colors:', colors);
+  return colors;
+}
+
+/**
+ * Converts a color string (rgb, rgba, hex) to a hex color
+ * @param {string} colorStr - Color string
+ * @returns {string} Hex color
+ */
+function colorToHex(colorStr) {
+  // If it's already a hex color, return it
+  if (colorStr.startsWith('#')) {
+    // Ensure it's a 6-digit hex
+    if (colorStr.length === 4) {
+      // Convert #RGB to #RRGGBB
+      return `#${colorStr[1]}${colorStr[1]}${colorStr[2]}${colorStr[2]}${colorStr[3]}${colorStr[3]}`;
+    }
+    return colorStr;
+  }
+  
+  // Handle rgb/rgba format
+  const rgbMatch = colorStr.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]);
+    const g = parseInt(rgbMatch[2]);
+    const b = parseInt(rgbMatch[3]);
+    
+    // Convert to hex
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+  
+  // If we can't parse it, return a default color
+  return '#000000';
+}
+
+/**
+ * Calculates the luminance of a color
+ * @param {string} hexColor - Hex color
+ * @returns {number} Luminance value (0-1)
+ */
+function calculateLuminance(hexColor) {
+  // Remove # if present
+  hexColor = hexColor.replace(/^#/, '');
+  
+  // Parse the hex values
+  let r, g, b;
+  if (hexColor.length === 3) {
+    // Short hex format (#RGB)
+    r = parseInt(hexColor.charAt(0) + hexColor.charAt(0), 16) / 255;
+    g = parseInt(hexColor.charAt(1) + hexColor.charAt(1), 16) / 255;
+    b = parseInt(hexColor.charAt(2) + hexColor.charAt(2), 16) / 255;
+  } else {
+    // Full hex format (#RRGGBB)
+    r = parseInt(hexColor.substring(0, 2), 16) / 255;
+    g = parseInt(hexColor.substring(2, 4), 16) / 255;
+    b = parseInt(hexColor.substring(4, 6), 16) / 255;
+  }
+  
+  // Calculate relative luminance using the sRGB color space formula
+  // https://www.w3.org/TR/WCAG20/#relativeluminancedef
+  r = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+  g = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+  b = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+  
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Checks if a gradient qualifies as a luminance palette
+ * @param {Array} colors - Array of colors in the gradient
+ * @returns {Object} Object with isLuminancePalette flag and sortedColors array
+ */
+function checkGradientLuminance(colors) {
+  console.log('\nChecking if gradient qualifies as luminance palette');
+  console.log('Number of colors:', colors.length);
+  
+  if (colors.length < 2) {
+    console.log('Not enough colors (minimum 2 required)');
+    return { isLuminancePalette: false, sortedColors: [] };
+  }
+  
+  // Convert colors to hex and calculate luminance
+  const colorsWithLuminance = colors.map(color => {
+    const hex = colorToHex(color);
+    const luminance = calculateLuminance(hex);
+    console.log(`Color: ${color} -> Hex: ${hex} -> Luminance: ${luminance.toFixed(4)}`);
+    return {
+      color: hex,
+      luminance: luminance
+    };
+  });
+  
+  // Calculate luminance range
+  const luminances = colorsWithLuminance.map(c => c.luminance);
+  const minLuminance = Math.min(...luminances);
+  const maxLuminance = Math.max(...luminances);
+  const luminanceRange = maxLuminance - minLuminance;
+  
+  console.log(`Min luminance: ${minLuminance.toFixed(4)}`);
+  console.log(`Max luminance: ${maxLuminance.toFixed(4)}`);
+  console.log(`Luminance range: ${luminanceRange.toFixed(4)}`);
+  
+  // Check if there's a significant difference in lightness (at least 0.3)
+  const SIGNIFICANT_DIFFERENCE = 0.3;
+  const isLuminancePalette = luminanceRange >= SIGNIFICANT_DIFFERENCE;
+  
+  console.log(`Significant difference threshold: ${SIGNIFICANT_DIFFERENCE}`);
+  console.log(`Is luminance palette: ${isLuminancePalette}`);
+  
+  // Sort colors by luminance (dark to light)
+  const sortedColors = [...colorsWithLuminance].sort((a, b) => a.luminance - b.luminance);
+  
+  console.log('Sorted colors by luminance (dark to light):');
+  sortedColors.forEach((c, i) => {
+    console.log(`  ${i+1}. ${c.color} (${c.luminance.toFixed(4)})`);
+  });
+  
+  return {
+    isLuminancePalette,
+    sortedColors: sortedColors.map(c => c.color)
+  };
+}
+
+/**
  * Fetches and parses WordPress color palettes from a given URL
  * @param {string} url - WordPress site URL
  * @returns {Promise<Object>} Object containing numbered sub-palettes and all colors
@@ -35,6 +176,50 @@ export async function fetchWordPressColorPalettes(url) {
       colorVars[match[1]] = match[2];
     }
     
+    // Extract gradient variables
+    const gradientVars = {};
+    // Use a more robust regex that handles nested parentheses in gradients
+    const gradientRegex = /--wp--preset--gradient--([\w-]+):\s*(linear-gradient\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\))/g;
+    let gradientMatch;
+    
+    console.log('\n=== PROCESSING WORDPRESS GRADIENTS ===');
+    let gradientCount = 0;
+    let qualifiedCount = 0;
+    
+    while ((gradientMatch = gradientRegex.exec(css)) !== null) {
+      gradientCount++;
+      const gradientName = gradientMatch[1];
+      const gradientValue = gradientMatch[2];
+      
+      console.log(`\nGradient #${gradientCount}: ${gradientName}`);
+      console.log(`Value: ${gradientValue}`);
+      
+      // Extract colors from the gradient
+      const gradientColors = extractColorsFromGradient(gradientValue);
+      
+      // Check if the gradient qualifies as a luminance palette
+      const { isLuminancePalette, sortedColors } = checkGradientLuminance(gradientColors);
+      
+      if (isLuminancePalette && sortedColors.length >= 2) {
+        console.log(`✅ Gradient "${gradientName}" QUALIFIES as a luminance palette`);
+        qualifiedCount++;
+        gradientVars[gradientName] = sortedColors;
+      } else {
+        console.log(`❌ Gradient "${gradientName}" does NOT qualify as a luminance palette`);
+        if (!isLuminancePalette) {
+          console.log('   Reason: Not enough luminance difference');
+        }
+        if (sortedColors.length < 2) {
+          console.log('   Reason: Not enough colors (minimum 2 required)');
+        }
+      }
+    }
+    
+    console.log(`\n=== GRADIENT SUMMARY ===`);
+    console.log(`Total gradients found: ${gradientCount}`);
+    console.log(`Qualified as luminance palettes: ${qualifiedCount}`);
+    console.log(`Rejected: ${gradientCount - qualifiedCount}`);
+    
     // Group numbered sub-palettes
     const subPalettes = {};
     Object.entries(colorVars).forEach(([name, color]) => {
@@ -64,6 +249,11 @@ export async function fetchWordPressColorPalettes(url) {
         // Create a new array with the correct indices
         validPalettes[name] = colorEntries.map(entry => entry[1]);
       }
+    });
+    
+    // Add gradient palettes
+    Object.entries(gradientVars).forEach(([name, colors]) => {
+      validPalettes[`gradient-${name}`] = colors;
     });
     
     // Add all colors as a special palette

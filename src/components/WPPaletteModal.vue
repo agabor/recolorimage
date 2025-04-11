@@ -229,7 +229,10 @@ onMounted(() => {
           class="palette-option"
           v-show="name !== 'all-colors'"
         >
-          <h4>{{ name.replace(/-/g, ' ') }}</h4>
+          <h4>
+            {{ name.startsWith('gradient-') ? 'Gradient: ' + name.replace('gradient-', '').replace(/-/g, ' ') : name.replace(/-/g, ' ') }}
+            <span v-if="name.startsWith('gradient-')" class="gradient-badge">Luminance Gradient</span>
+          </h4>
           <div class="color-preview">
             <div 
               v-for="(color, index) in colors" 
@@ -629,5 +632,17 @@ onMounted(() => {
 
 .confirm-btn:not(:disabled):hover {
   background-color: var(--wp--preset--color--nord-frost-2);
+}
+
+.gradient-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  background-color: var(--wp--preset--color--nord-frost-0);
+  color: var(--wp--preset--color--nord-snow-storm-2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  font-weight: normal;
 }
 </style>

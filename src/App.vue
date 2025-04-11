@@ -344,8 +344,6 @@ watch(error, (newError) => {
 </template>
 
 <style>
-
-
 .app {
   width: 100%;
   padding: 1rem;
@@ -357,12 +355,10 @@ watch(error, (newError) => {
   gap: 1.5rem;
 }
 
-
 .button {
   background: var(--wp--preset--color--nord-snow-storm-2);
   border: 1px solid var(--wp--preset--color--nord-snow-storm-0);
 }
-
 
 .button:hover {
   background: var(--wp--preset--color--nord-snow-storm-0);
@@ -418,6 +414,7 @@ watch(error, (newError) => {
 .color-swatch.disabled {
   opacity: 0.5;
 }
+
 .color-swatch.disabled::after {
    content: '';
    position: absolute;
@@ -433,7 +430,8 @@ watch(error, (newError) => {
      rgba(0, 0, 0, 0.2) 10px
    );
    border-radius: 4px;
- }
+}
+
 .color-swatch.matched {
   transform: scale(1.25);
   z-index: 1;
@@ -446,61 +444,10 @@ watch(error, (newError) => {
   margin-bottom: 1rem;
 }
 
-.add-color-btn {
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.color-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.color-input-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .color-picker {
   width: 40px;
   height: 40px;
   padding: 0;
-  border: none;
-  cursor: pointer;
-}
-
-.remove-color-btn {
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.remove-color-btn:disabled {
-  cursor: not-allowed;
-}
-
-.custom-palette-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.apply-btn, .cancel-btn {
-  flex: 1;
-  padding: 0.75rem;
-  border-radius: 4px;
   border: none;
   cursor: pointer;
 }
@@ -601,15 +548,7 @@ watch(error, (newError) => {
   gap: 0.5rem;
 }
 
-.edit-mode-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-
-.reset-btn {
+.edit-mode-btn, .reset-btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
@@ -633,16 +572,12 @@ watch(error, (newError) => {
   z-index: 2;
 }
 
-.wp-import-btn i {
-  margin-right: 0.5rem;
-}
-
 .advanced-settings-btn {
   width: 100%;
   padding: 0.5rem;
   margin-bottom: 1rem;
   border-radius: 4px;
-  background-color: var(--wp--preset--color--nord-snow-storm-0) important;
+  background-color: var(--wp--preset--color--nord-snow-storm-0) !important;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;

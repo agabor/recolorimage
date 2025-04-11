@@ -12,6 +12,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'select']);
 
 const palettes = ref({});
+const colorNames = ref({}); // Map of color codes to their variable names
 const loading = ref(false);
 const error = ref(null);
 const urlInput = ref('');
@@ -56,9 +57,42 @@ const fetchPalettes = async () => {
   loading.value = true;
   error.value = null;
   try {
+    // Fetch palettes (color values)
     palettes.value = await fetchWordPressColorPalettes(urlInput.value);
     if (Object.keys(palettes.value).length === 0) {
       error.value = 'No numbered color palettes found';
+      return;
+    }
+    
+    // Fetch CSS to extract color names
+    try {
+      const proxyUrl = `https://recolorimage.com/wp-admin/admin-ajax.php?action=fetch_wp_styles&url=${encodeURIComponent(urlInput.value)}`;
+      const response = await fetch(proxyUrl);
+      const data = await response.json();
+      
+      if (data.success) {
+        const html = data.data.html;
+        const styleMatch = html.match(/<style id='global-styles-inline-css'>([\s\S]*?)<\/style>/);
+        
+        if (styleMatch) {
+          const css = styleMatch[1];
+          const varRegex = /--wp--preset--color--([\w-]+):\s*(#[A-Fa-f0-9]{6})/g;
+          let match;
+          
+          // Clear previous color names
+          colorNames.value = {};
+          
+          // Extract color names
+          while ((match = varRegex.exec(css)) !== null) {
+            const name = match[1];
+            const color = match[2];
+            colorNames.value[color.toLowerCase()] = name;
+          }
+        }
+      }
+    } catch (nameErr) {
+      console.error('Failed to fetch color names:', nameErr);
+      // Continue without color names, not a critical error
     }
   } catch (err) {
     error.value = err.message;
@@ -228,16 +262,25 @@ onMounted(() => {
           <h4>Available Colors for Hue Palette</h4>
           <p class="selection-hint">Click colors to select/deselect for hue palette</p>
         </div>
-        <div class="color-preview hue-colors-grid">
+        <div class="hue-colors-grid">
           <div 
             v-for="(color, index) in availableHueColors" 
             :key="`hue-${index}`"
-            class="color-swatch hue-color-option"
+            class="hue-color-item"
             :class="{ 'selected': selectedHueColors.has(color) }"
-            :style="{ backgroundColor: color }"
-            :title="color"
             @click="toggleHueColorSelection(color)"
-          ></div>
+          >
+            <div 
+              class="color-swatch hue-color-option"
+              :style="{ backgroundColor: color }"
+            ></div>
+            <div class="color-info">
+              <div v-if="colorNames[color.toLowerCase()]" class="color-name">
+                {{ colorNames[color.toLowerCase()] }}
+              </div>
+              <span class="color-code">{{ color }}</span>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -461,24 +504,77 @@ onMounted(() => {
 }
 
 .hue-colors-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.hue-color-option {
+.hue-color-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
   transition: all 0.2s ease;
+  background-color: var(--wp--preset--color--nord-snow-storm-0);
 }
 
-.hue-color-option:hover {
-  transform: scale(1.1);
+.hue-color-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.hue-color-option.selected {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 2px var(--wp--preset--color--nord-frost-3);
+.hue-color-item.selected {
+  background-color: var(--wp--preset--color--nord-frost-0);
+  transform: translateY(-3px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.hue-color-option {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.selected .hue-color-option {
+  border-color: var(--wp--preset--color--nord-frost-3);
+}
+
+.color-info {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.color-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: var(--wp--preset--color--nord-polar-night-0);
+  word-break: break-word;
+}
+
+.color-code {
+  font-size: 0.75rem;
+  font-family: monospace;
+  word-break: break-all;
+  color: var(--wp--preset--color--nord-polar-night-0);
+  opacity: 0.8;
+}
+
+.selected .color-name,
+.selected .color-code {
+  color: var(--wp--preset--color--nord-snow-storm-2);
+}
+
+.selected .color-code {
+  font-weight: bold;
 }
 
 .modal-footer {

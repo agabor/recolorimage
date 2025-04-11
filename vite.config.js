@@ -4,11 +4,23 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
-    vue(),
-    vueDevTools(),
-  ],
+    vue({
+      // Disable the inspector in production mode
+      template: {
+        compilerOptions: {
+          isCustomElement: tag => tag.includes('-'),
+          // Disable the inspector in production mode
+          hoistStatic: true,
+          // This will remove the data-v-inspector attributes in production
+          __DEV__: mode === 'development'
+        }
+      }
+    }),
+    // Only include Vue DevTools in development mode
+    mode === 'development' ? vueDevTools() : null,
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -33,4 +45,4 @@ export default defineConfig({
     },
     target: 'es2015'
   }
-})
+}))

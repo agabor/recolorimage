@@ -119,9 +119,9 @@ onMounted(() => {
           <button 
             @click="togglePaletteSelection(name)"
             class="select-btn"
-            :class="{ 'selected': selectedPalettes.value.has(name) }"
+            :class="{ 'selected': selectedPalettes.has(name) }"
           >
-            {{ selectedPalettes.value.has(name) ? 'Selected' : 'Select' }}
+            {{ selectedPalettes.has(name) ? 'Selected' : 'Select' }}
           </button>
         </div>
       </div>
@@ -130,7 +130,7 @@ onMounted(() => {
         <button 
           @click="handleConfirm" 
           class="confirm-btn"
-          :disabled="selectedPalettes.value.size === 0"
+          :disabled="selectedPalettes.size === 0"
         >
           Use Selected Palettes
         </button>

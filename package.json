@@ -5,10 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"minify-worker": "node minify-worker.js",
-		"build": "vite build && npm run minify-worker",
+		"build": "vite build",
 		"pre-render": "node server.js",
-		"build:plugin": "rm -rf dist plugin-build && vite build && npm run minify-worker && npm run pre-render && mkdir -p plugin-build/recolorimage && cp -r dist recolorimage.php wordpress-plugin-readme.md plugin-build/recolorimage/ && node update-version.js && cd plugin-build && zip -r recolorimage.zip recolorimage && rm -rf recolorimage",
+		"build:plugin": "rm -rf dist plugin-build && vite build && npm run pre-render && mkdir -p plugin-build/recolorimage && cp -r dist recolorimage.php wordpress-plugin-readme.md plugin-build/recolorimage/ && node update-version.js && cd plugin-build && zip -r recolorimage.zip recolorimage && rm -rf recolorimage",
 		"preview": "vite preview",
 		"test:unit": "vitest",
 		"lint": "eslint . --fix",

@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { fetchWordPressColorPalettes } from '../utils/colorUtils';
 
+import chroma from 'chroma-js';
+
 const props = defineProps({
   show: Boolean,
   url: String
@@ -13,6 +15,7 @@ const palettes = ref({});
 const loading = ref(false);
 const error = ref(null);
 const urlInput = ref('');
+const selectedPalettes = ref(new Set());
 
 const fetchPalettes = async () => {
   loading.value = true;
@@ -29,8 +32,35 @@ const fetchPalettes = async () => {
   }
 };
 
-const handleSelect = (name, colors) => {
-  emit('select', { name, colors });
+const togglePaletteSelection = (name) => {
+  if (selectedPalettes.value.has(name)) {
+    selectedPalettes.value.delete(name);
+  } else {
+    selectedPalettes.value.add(name);
+  }
+};
+
+const handleConfirm = () => {
+  // Combine all selected palettes
+  const allColors = [];
+  selectedPalettes.value.forEach(name => {
+    allColors.push(...palettes.value[name]);
+  });
+
+  // Sort colors by luminance (dark to light)
+  const sortedColors = allColors.sort((a, b) => {
+    const lumA = chroma(a).luminance();
+    const lumB = chroma(b).luminance();
+    return lumA - lumB;
+  });
+
+  // Remove duplicates while preserving order
+  const uniqueColors = [...new Set(sortedColors)];
+
+  emit('select', { 
+    name: 'combined', 
+    colors: uniqueColors
+  });
   emit('close');
 };
 
@@ -87,12 +117,23 @@ onMounted(() => {
             ></div>
           </div>
           <button 
-            @click="handleSelect(name, colors)"
+            @click="togglePaletteSelection(name)"
             class="select-btn"
+            :class="{ 'selected': selectedPalettes.value.has(name) }"
           >
-            Select
+            {{ selectedPalettes.value.has(name) ? 'Selected' : 'Select' }}
           </button>
         </div>
+      </div>
+      
+      <div v-if="Object.keys(palettes).length > 0" class="modal-footer">
+        <button 
+          @click="handleConfirm" 
+          class="confirm-btn"
+          :disabled="selectedPalettes.value.size === 0"
+        >
+          Use Selected Palettes
+        </button>
       </div>
     </div>
   </div>
@@ -207,7 +248,38 @@ onMounted(() => {
   cursor: pointer;
 }
 
+.select-btn.selected {
+  background-color: var(--wp--preset--color--nord-frost-2);
+  color: var(--wp--preset--color--nord-snow-storm-2);
+}
+
 .select-btn:hover {
+  background-color: var(--wp--preset--color--nord-frost-2);
+}
+
+.modal-footer {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--wp--preset--color--nord-snow-storm-0);
+  text-align: center;
+}
+
+.confirm-btn {
+  padding: 0.75rem 2rem;
+  background-color: var(--wp--preset--color--nord-frost-3);
+  color: var(--wp--preset--color--nord-snow-storm-2);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.confirm-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.confirm-btn:not(:disabled):hover {
   background-color: var(--wp--preset--color--nord-frost-2);
 }
 </style>

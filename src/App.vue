@@ -120,9 +120,9 @@ const updateImageUrls = () => {
 };
 
 // Handle WordPress palette selection
-const handleWPPaletteSelect = ({ name, colors }) => {
-  // Create a new palette entry
-  const wpPaletteName = `wp-${name}`;
+const handleWPPaletteSelect = ({ colors }) => {
+  // Create a new palette entry with timestamp to ensure uniqueness
+  const wpPaletteName = `wp-palette-${Date.now()}`;
   DEFAULT_PALETTES[wpPaletteName] = {
     luminance: colors.map(color => chroma(color)),
     hue: [] // WordPress numbered palettes are used for luminance only

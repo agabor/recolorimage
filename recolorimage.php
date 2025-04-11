@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Recolor Image
  * Description: Transform images by mapping their colors to a custom palette using luminance mapping and color adjustment.
- * Version: 1.0.0
+ * Version: %%VERSION%%
  * Author: Gabor Angyal
  * GitHub Plugin URI: agabor/recolorimage
  */
@@ -33,7 +33,7 @@ class RecolorImages {
             'recolorimage',
             plugin_dir_url(__FILE__) . 'dist/assets/index.js',
             array(),
-            '1.0.0',
+            '%%VERSION%%',
             true
         );
         
@@ -41,7 +41,7 @@ class RecolorImages {
             'recolorimage',
             plugin_dir_url(__FILE__) . 'dist/assets/style.css',
             array(),
-            '1.0.0'
+            '%%VERSION%%'
         );
     }
 

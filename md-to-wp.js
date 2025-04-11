@@ -11,8 +11,6 @@ import fs from 'fs';
 import { marked } from 'marked';
 import { JSDOM } from 'jsdom';
 
-/* global process */
-
 // Always use JSDOM since we've imported it
 const useJsdom = true;
 

@@ -48,12 +48,13 @@ export default defineConfig(({ mode }) => ({
     target: 'es2015',
     // Copy the worker file to the output directory
     closeBundle() {
-      const workerSrc = resolve(__dirname, 'src/workers/imageProcessingWorker.js');
-      const workerDest = resolve(__dirname, 'dist/assets/imageProcessingWorker.js');
+      const dirname = fileURLToPath(new URL('.', import.meta.url));
+      const workerSrc = resolve(dirname, 'src/workers/imageProcessingWorker.js');
+      const workerDest = resolve(dirname, 'dist/assets/imageProcessingWorker.js');
       
       // Ensure the assets directory exists
-      if (!fs.existsSync(resolve(__dirname, 'dist/assets'))) {
-        fs.mkdirSync(resolve(__dirname, 'dist/assets'), { recursive: true });
+      if (!fs.existsSync(resolve(dirname, 'dist/assets'))) {
+        fs.mkdirSync(resolve(dirname, 'dist/assets'), { recursive: true });
       }
       
       // Copy the worker file

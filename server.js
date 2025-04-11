@@ -1,18 +1,30 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createServer } from 'vite';
+import { build, createServer } from 'vite';
 
 // Get the directory name of the current module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function renderApp() {
-  console.log('Setting up SSR environment...');
+  console.log('Creating production build...');
   
-  // Create Vite dev server in middleware mode
+  // First, create a production build for client-side
+  await build({
+    mode: 'production',
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true
+    }
+  });
+  
+  console.log('Production build completed. Setting up SSR environment...');
+  
+  // Create Vite server in middleware mode for SSR
   const vite = await createServer({
     server: { middlewareMode: true },
-    appType: 'custom'
+    appType: 'custom',
+    mode: 'production' // Use production mode
   });
   
   try {
@@ -38,7 +50,7 @@ async function renderApp() {
     
     console.log('Pre-rendering complete. Updated recolorimage.php with server-rendered HTML.');
   } catch (error) {
-    console.error('Error pre-rendering app:', error);
+    console.error('Error in production build or pre-rendering:', error);
     process.exit(1);
   } finally {
     // Close Vite server

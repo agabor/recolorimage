@@ -318,7 +318,6 @@ export const DEFAULT_PALETTES = {
       '#00d084',   // vivid-green-cyan
       '#0693e3',   // vivid-cyan-blue
       '#9b51e0',   // vivid-purple
-      '#674970',   // purple
       '#e53b51'   // medium-pink
     ]
   },

@@ -154,7 +154,7 @@ watch(error, (newError) => {
             :has-processed-image="hasProcessedImage"
             @file-selected="handleFileSelected"
             @download="handleDownload"
-          />
+          ></ImageUploader>
         </section>
         
         <!-- Palette Section -->

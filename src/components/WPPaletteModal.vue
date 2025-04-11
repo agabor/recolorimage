@@ -259,30 +259,6 @@ onMounted(() => {
 
       <!-- Luminance Step -->
       <div v-if="step === 'luminance'" class="palettes-container">
-        <!-- Default Grayscale Option (always shown) -->
-        <div class="palette-option grayscale-option">
-          <h4>
-            Grayscale
-            <span class="gradient-badge">Default Option</span>
-          </h4>
-          <div class="color-preview">
-            <div 
-              v-for="(color, index) in grayscalePalette" 
-              :key="index"
-              class="color-swatch"
-              :style="{ backgroundColor: color }"
-              :title="color"
-            ></div>
-          </div>
-          <button 
-            @click="selectGrayscalePalette"
-            class="select-btn"
-            :class="{ 'selected': isGrayscaleSelected }"
-          >
-            {{ isGrayscaleSelected ? 'Selected' : 'Select' }}
-          </button>
-        </div>
-        
         <!-- WordPress palettes (shown only when loaded) -->
         <template v-if="Object.keys(palettes).length > 0">
           <!-- Regular numbered palettes -->
@@ -311,6 +287,30 @@ onMounted(() => {
               :class="{ 'selected': selectedPalettes.has(name) }"
             >
               {{ selectedPalettes.has(name) ? 'Selected' : 'Select' }}
+            </button>
+          </div>
+          
+          <!-- Default Grayscale Option (shown only after import) -->
+          <div class="palette-option grayscale-option">
+            <h4>
+              Grayscale
+              <span class="gradient-badge">Default Option</span>
+            </h4>
+            <div class="color-preview">
+              <div 
+                v-for="(color, index) in grayscalePalette" 
+                :key="index"
+                class="color-swatch"
+                :style="{ backgroundColor: color }"
+                :title="color"
+              ></div>
+            </div>
+            <button 
+              @click="selectGrayscalePalette"
+              class="select-btn"
+              :class="{ 'selected': isGrayscaleSelected }"
+            >
+              {{ isGrayscaleSelected ? 'Selected' : 'Select' }}
             </button>
           </div>
         </template>
@@ -516,7 +516,7 @@ onMounted(() => {
   grid-column: 1 / -1; /* Span all columns */
   background-color: var(--wp--preset--color--nord-snow-storm-0);
   border: 2px solid var(--wp--preset--color--nord-frost-3);
-  margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 
 .grayscale-option h4 {

@@ -300,6 +300,28 @@ export async function fetchWordPressColorPalettes(url) {
  * Default color palettes
  */
 export const DEFAULT_PALETTES = {
+  // WordPress Theme
+  wordpress: {
+    luminance: [
+      '#000000', // black
+      '#111',    // dark-gray
+      '#22313f', // blue-gray
+      '#abb8c3', // cyan-bluish-gray
+      '#f1f1f1', // light-gray
+      '#fff'     // white
+    ],
+    hue: [
+      '#cf2e2e',   // vivid-red
+      '#ff6900',   // luminous-vivid-orange
+      '#fcb900',   // luminous-vivid-amber
+      '#f4ca16',   // yellow
+      '#00d084',   // vivid-green-cyan
+      '#0693e3',   // vivid-cyan-blue
+      '#9b51e0',   // vivid-purple
+      '#674970',   // purple
+      '#e53b51'   // medium-pink
+    ]
+  },
   // Nord Theme
   nord: {
     luminance: [

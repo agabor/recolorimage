@@ -7,8 +7,16 @@
  */
 export async function fetchWordPressColorPalettes(url) {
   try {
-    const response = await fetch(url);
-    const html = await response.text();
+    // Use WordPress plugin's proxy endpoint
+    const proxyUrl = `https://recolorimage.com/wp-admin/admin-ajax.php?action=fetch_wp_styles&url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.data || 'Failed to fetch WordPress styles');
+    }
+    
+    const html = data.data.html;
     
     // Find the global styles CSS
     const styleMatch = html.match(/<style id='global-styles-inline-css'>([\s\S]*?)<\/style>/);

@@ -166,10 +166,12 @@ onMounted(() => {
 
       <!-- Luminance Step -->
       <div v-if="step === 'luminance' && Object.keys(palettes).length > 0" class="palettes-container">
+        <!-- Regular numbered palettes -->
         <div 
           v-for="(colors, name) in palettes" 
           :key="name"
           class="palette-option"
+          v-show="name !== 'all-colors'"
         >
           <h4>{{ name.replace(/-/g, ' ') }}</h4>
           <div class="color-preview">
@@ -189,6 +191,8 @@ onMounted(() => {
             {{ selectedPalettes.has(name) ? 'Selected' : 'Select' }}
           </button>
         </div>
+        
+        <!-- All Colors palette removed from luminance step as per requirements -->
       </div>
       
       <!-- Hue Step -->
@@ -369,6 +373,17 @@ onMounted(() => {
   border: 1px solid var(--wp--preset--color--nord-snow-storm-0);
   border-radius: 4px;
   padding: 1rem;
+}
+
+.all-colors-option {
+  grid-column: 1 / -1; /* Span all columns */
+  background-color: var(--wp--preset--color--nord-snow-storm-0);
+  border: 2px solid var(--wp--preset--color--nord-frost-3);
+}
+
+.all-colors-option h4 {
+  color: var(--wp--preset--color--nord-frost-3);
+  font-weight: bold;
 }
 
 .color-preview {

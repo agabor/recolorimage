@@ -3,7 +3,7 @@
 /**
  * Fetches and parses WordPress color palettes from a given URL
  * @param {string} url - WordPress site URL
- * @returns {Promise<Object>} Object containing numbered sub-palettes
+ * @returns {Promise<Object>} Object containing numbered sub-palettes and all colors
  */
 export async function fetchWordPressColorPalettes(url) {
   try {
@@ -65,6 +65,9 @@ export async function fetchWordPressColorPalettes(url) {
         validPalettes[name] = colorEntries.map(entry => entry[1]);
       }
     });
+    
+    // Add all colors as a special palette
+    validPalettes['all-colors'] = Object.values(colorVars);
     
     return validPalettes;
   } catch (error) {

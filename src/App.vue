@@ -170,7 +170,7 @@ watch(error, (newError) => {
             </div>
 
             <div class="palette-actions">
-            <button class="edit-mode-btn button" @click="showWPModal = true">
+            <button class="action-btn button" @click="showWPModal = true">
               <i class="fa-brands fa-wordpress"></i>
               Import from WordPress
             </button>
@@ -191,7 +191,7 @@ watch(error, (newError) => {
             <h3>Luminance Palette</h3>
             <div class="palette-actions">
               <button 
-                class="edit-mode-btn button" 
+                class="action-btn button" 
                 :class="{ active: isEditMode }" 
                 @click="toggleEditMode"
                 title="Toggle edit mode"
@@ -200,7 +200,7 @@ watch(error, (newError) => {
               </button>
               <button 
                 v-if="isEditMode"
-                class="reset-btn button" 
+                class="action-btn button" 
                 @click="resetPalette"
                 title="Reset to original colors"
               >
@@ -548,7 +548,7 @@ watch(error, (newError) => {
   gap: 0.5rem;
 }
 
-.edit-mode-btn, .reset-btn {
+.action-btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;

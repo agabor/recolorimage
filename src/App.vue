@@ -144,7 +144,7 @@ watch(error, (newError) => {
 </script>
 
 <template>
-  <div class="app">
+  <div id="recolor-app" class="app">
     <div class="app-container">
         <!-- Image Upload -->
         <section class="section">

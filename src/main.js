@@ -7,4 +7,4 @@ import App from './App.vue'
 const app = createSSRApp(App);
 
 // Mount the app in the browser
-app.mount('.app');
+app.mount('#recolor-app');

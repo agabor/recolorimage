@@ -29,13 +29,27 @@ const allColors = computed(() => {
   return [...new Set(colors)]; // Remove duplicates
 });
 
-// Colors available for hue selection (all colors except those in luminance palette)
+// Colors available for hue selection (all colors except those in luminance palette and with sufficient saturation)
 const availableHueColors = computed(() => {
   if (!luminancePalette.value.length) return [];
   
-  return allColors.value.filter(color => 
-    !luminancePalette.value.includes(color)
-  );
+  // Minimum saturation threshold (0.2 = 20%)
+  const MIN_SATURATION = 0.2;
+  
+  return allColors.value.filter(color => {
+    // Skip colors already in luminance palette
+    if (luminancePalette.value.includes(color)) return false;
+    
+    // Filter out low saturation colors
+    try {
+      const hsl = chroma(color).hsl();
+      const saturation = hsl[1]; // Saturation is the second value in HSL
+      return saturation >= MIN_SATURATION;
+    } catch (e) {
+      // If color parsing fails, exclude it
+      return false;
+    }
+  });
 });
 
 const fetchPalettes = async () => {

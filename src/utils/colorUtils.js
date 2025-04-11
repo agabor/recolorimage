@@ -38,24 +38,31 @@ export async function fetchWordPressColorPalettes(url) {
     // Group numbered sub-palettes
     const subPalettes = {};
     Object.entries(colorVars).forEach(([name, color]) => {
-      // Look for patterns like 'something-0', 'something-1', etc.
+      // Look for patterns like 'something-0', 'something-1', 'something-10', etc.
       const match = name.match(/(.*?)-(\d+)$/);
       if (match) {
         const [, baseName, index] = match;
         if (!subPalettes[baseName]) {
-          subPalettes[baseName] = [];
+          subPalettes[baseName] = {};
         }
+        // Use object instead of array to handle sparse numbering
         subPalettes[baseName][parseInt(index)] = color;
       }
     });
     
-    // Filter out incomplete palettes and sort colors
+    // Filter out incomplete palettes
     const validPalettes = {};
     Object.entries(subPalettes).forEach(([name, colors]) => {
-      // Remove sparse arrays and ensure sequential numbering
-      const validColors = colors.filter(Boolean);
-      if (validColors.length === colors.length && validColors.length >= 2) {
-        validPalettes[name] = validColors;
+      // Convert object to array, preserving sparse numbering
+      const colorEntries = Object.entries(colors);
+      
+      // Only keep palettes with at least 2 colors
+      if (colorEntries.length >= 2) {
+        // Sort by index (numeric)
+        colorEntries.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+        
+        // Create a new array with the correct indices
+        validPalettes[name] = colorEntries.map(entry => entry[1]);
       }
     });
     

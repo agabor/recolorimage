@@ -19,7 +19,7 @@ export async function fetchWordPressColorPalettes(url) {
     const html = data.data.html;
     
     // Find the global styles CSS
-    const styleMatch = html.match(/<style id='global-styles-inline-css'>([\s\S]*?)<\/style>/);
+    const styleMatch = html.match(/<style id='global-styles-inline-css'(?:\s+type='text\/css')?>([\s\S]*?)<\/style>/);
     if (!styleMatch) {
       throw new Error('Global styles not found');
     }

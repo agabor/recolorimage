@@ -54,7 +54,7 @@ const availableHueColors = computed(() => {
       return saturation >= MIN_SATURATION && 
              luminance >= MIN_LUMINANCE && 
              luminance <= MAX_LUMINANCE;
-    } catch (e) {
+    } catch {
       // If color parsing fails, exclude it
       return false;
     }

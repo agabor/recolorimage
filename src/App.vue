@@ -1,11 +1,15 @@
 <script setup>
 import { ref, watch } from 'vue';
 import ImageUploader from './components/ImageUploader.vue';
+import WPPaletteModal from './components/WPPaletteModal.vue';
 import { useImageProcessing } from './composables/useImageProcessing';
 import { DEFAULT_PALETTES } from './utils/colorUtils';
 import chroma from 'chroma-js';
 
-  // Initialize the image processing composable
+  // Modal state
+const showWPModal = ref(false);
+
+// Initialize the image processing composable
 const {
   isProcessing,
   error,
@@ -115,6 +119,22 @@ const updateImageUrls = () => {
   }
 };
 
+// Handle WordPress palette selection
+const handleWPPaletteSelect = ({ name, colors }) => {
+  // Create a new palette entry
+  const wpPaletteName = `wp-${name}`;
+  DEFAULT_PALETTES[wpPaletteName] = {
+    luminance: colors.map(color => chroma(color)),
+    hue: [] // WordPress numbered palettes are used for luminance only
+  };
+  
+  // Update the selected palette
+  setPalette(wpPaletteName);
+  
+  // Enable luminance-only mode since we don't have hue colors
+  settings.luminancePaletteOnly = true;
+};
+
 // Watch for errors
 watch(error, (newError) => {
   if (newError) {
@@ -139,14 +159,26 @@ watch(error, (newError) => {
         
         <!-- Palette Section -->
         <section class="section">
-          <div class="palette-selector">
-            <label for="palette-select">Select Palette:</label>
-            <select id="palette-select" class="button" v-model="selectedPalette.name" @change="handlePaletteUpdate($event.target.value)">
-              <option v-for="palette in Object.keys(DEFAULT_PALETTES)" :key="palette" :value="palette">
-                {{ palette.charAt(0).toUpperCase() + palette.slice(1) }}
-              </option>
-            </select>
+          <div class="palette-controls">
+            <div class="palette-selector">
+              <label for="palette-select">Select Palette:</label>
+              <select id="palette-select" class="button" v-model="selectedPalette.name" @change="handlePaletteUpdate($event.target.value)">
+                <option v-for="palette in Object.keys(DEFAULT_PALETTES)" :key="palette" :value="palette">
+                  {{ palette.charAt(0).toUpperCase() + palette.slice(1) }}
+                </option>
+              </select>
+            </div>
+            <button class="wp-import-btn button" @click="showWPModal = true">
+              Import from WordPress
+            </button>
           </div>
+
+          <!-- WordPress Palette Modal -->
+          <WPPaletteModal
+            :show="showWPModal"
+            @close="showWPModal = false"
+            @select="handleWPPaletteSelect"
+          />
         </section>
 
         <section class="section">
@@ -343,6 +375,13 @@ watch(error, (newError) => {
   margin-bottom: 1rem;
 }
 
+.palette-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
 .palette-selector {
   display: flex;
   align-items: center;
@@ -350,6 +389,7 @@ watch(error, (newError) => {
 }
 
 .palette-selector select {
+  min-width: 150px;
   padding: 0.5rem;
   border-radius: 4px;
 }

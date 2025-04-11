@@ -1,6 +1,63 @@
 
 
 /**
+ * Fetches and parses WordPress color palettes from a given URL
+ * @param {string} url - WordPress site URL
+ * @returns {Promise<Object>} Object containing numbered sub-palettes
+ */
+export async function fetchWordPressColorPalettes(url) {
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+    
+    // Find the global styles CSS
+    const styleMatch = html.match(/<style id='global-styles-inline-css'>([\s\S]*?)<\/style>/);
+    if (!styleMatch) {
+      throw new Error('Global styles not found');
+    }
+    
+    const css = styleMatch[1];
+    
+    // Extract color variables
+    const colorVars = {};
+    const varRegex = /--wp--preset--color--([\w-]+):\s*(#[A-Fa-f0-9]{6})/g;
+    let match;
+    
+    while ((match = varRegex.exec(css)) !== null) {
+      colorVars[match[1]] = match[2];
+    }
+    
+    // Group numbered sub-palettes
+    const subPalettes = {};
+    Object.entries(colorVars).forEach(([name, color]) => {
+      // Look for patterns like 'something-0', 'something-1', etc.
+      const match = name.match(/(.*?)-(\d+)$/);
+      if (match) {
+        const [, baseName, index] = match;
+        if (!subPalettes[baseName]) {
+          subPalettes[baseName] = [];
+        }
+        subPalettes[baseName][parseInt(index)] = color;
+      }
+    });
+    
+    // Filter out incomplete palettes and sort colors
+    const validPalettes = {};
+    Object.entries(subPalettes).forEach(([name, colors]) => {
+      // Remove sparse arrays and ensure sequential numbering
+      const validColors = colors.filter(Boolean);
+      if (validColors.length === colors.length && validColors.length >= 2) {
+        validPalettes[name] = validColors;
+      }
+    });
+    
+    return validPalettes;
+  } catch (error) {
+    throw new Error(`Failed to fetch WordPress palettes: ${error.message}`);
+  }
+}
+
+/**
  * Default color palettes
  */
 export const DEFAULT_PALETTES = {

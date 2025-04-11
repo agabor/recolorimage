@@ -30,22 +30,30 @@ const allColors = computed(() => {
   return [...new Set(colors)]; // Remove duplicates
 });
 
-// Colors available for hue selection (all colors except those in luminance palette and with sufficient saturation)
+// Colors available for hue selection (all colors except those in luminance palette, with sufficient saturation, and not too light/dark)
 const availableHueColors = computed(() => {
   if (!luminancePalette.value.length) return [];
   
-  // Minimum saturation threshold (0.2 = 20%)
-  const MIN_SATURATION = 0.2;
+  // Thresholds
+  const MIN_SATURATION = 0.2; // 20% minimum saturation
+  const MIN_LUMINANCE = 0.15; // Exclude very dark colors
+  const MAX_LUMINANCE = 0.85; // Exclude very light colors
   
   return allColors.value.filter(color => {
     // Skip colors already in luminance palette
     if (luminancePalette.value.includes(color)) return false;
     
-    // Filter out low saturation colors
     try {
-      const hsl = chroma(color).hsl();
+      // Get color properties using chroma.js
+      const chromaColor = chroma(color);
+      const hsl = chromaColor.hsl();
       const saturation = hsl[1]; // Saturation is the second value in HSL
-      return saturation >= MIN_SATURATION;
+      const luminance = chromaColor.luminance();
+      
+      // Filter out colors with low saturation or extreme luminance
+      return saturation >= MIN_SATURATION && 
+             luminance >= MIN_LUMINANCE && 
+             luminance <= MAX_LUMINANCE;
     } catch (e) {
       // If color parsing fails, exclude it
       return false;

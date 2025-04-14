@@ -128,7 +128,7 @@ The Vue.js application is implemented as modular components and composables for 
 
 #### 2. Luminance Range Adjustment
 **Implemented in**: 
-- `colorUtils.js` (adjustLuminanceRange and calculateLuminanceRange functions)
+- `workers/workerUtils.js` (adjustLuminanceRange and calculateLuminanceRange functions)
 - **Input**: Original HSL image, luminance palette
 - **Process**:
   - Determine luminance range of input image (allowing 5% outliers on each end)

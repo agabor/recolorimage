@@ -6,12 +6,8 @@
  * This is a classic (non-module) worker
  */
 
-/* global importScripts */
-// Import from colorUtils
-importScripts('../utils/colorUtils.js');
-
-// Use the imported functions from colorUtils.js
-const { rgbToHsl, hexToHsl, adjustLuminanceRange } = self;
+// Import utility functions directly from workerUtils.js
+import { rgbToHsl, hexToHsl, adjustLuminanceRange } from './workerUtils.js';
 
 
 /**

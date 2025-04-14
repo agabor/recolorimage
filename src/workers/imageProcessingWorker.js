@@ -478,9 +478,12 @@ function hslArrayToImageData(hslArray, width, height) {
  * Adjust the luminance range of an HSL image
  */
 function adjustLuminanceRange(hslArray, luminancePalette, outlierPercentage) {
-  // Calculate luminance range of input image
+  // Filter out transparent pixels (alpha < 25) before calculating luminance range
+  const nonTransparentPixels = hslArray.filter(pixel => pixel.alpha >= 25);
+  
+  // Calculate luminance range of input image using only non-transparent pixels
   const inputRange = calculateLuminanceRange(
-    hslArray.map(pixel => pixel.hsl),
+    nonTransparentPixels.map(pixel => pixel.hsl),
     outlierPercentage
   );
   

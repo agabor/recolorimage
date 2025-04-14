@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateLuminanceRange, DEFAULT_PALETTES } from '@/utils/colorUtils';
+import { calculateLuminanceRange, rgbToHsl, DEFAULT_PALETTES } from '@/utils/colorUtils';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
@@ -29,48 +29,6 @@ function hexToRgb(hex) {
   }
   
   return [r, g, b];
-}
-
-// Helper function to convert RGB to HSL
-function rgbToHsl(rgb) {
-  // Normalize RGB values to 0-1 range
-  const r = rgb[0] / 255;
-  const g = rgb[1] / 255;
-  const b = rgb[2] / 255;
-  
-  // Find min and max values
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  
-  // Calculate lightness
-  const l = (max + min) / 2;
-  
-  // If min and max are the same, it's a shade of gray (no saturation)
-  if (max === min) {
-    return [0, 0, l]; // Hue is 0, saturation is 0
-  }
-  
-  // Calculate saturation
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  
-  // Calculate hue
-  let h;
-  switch (max) {
-    case r:
-      h = (g - b) / d + (g < b ? 6 : 0);
-      break;
-    case g:
-      h = (b - r) / d + 2;
-      break;
-    case b:
-      h = (r - g) / d + 4;
-      break;
-  }
-  
-  h = h * 60; // Convert to degrees
-  
-  return [h, s, l];
 }
 
 // Helper function to get the luminance range of a palette

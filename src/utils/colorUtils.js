@@ -172,6 +172,52 @@ function checkGradientLuminance(colors) {
 }
 
 /**
+ * Convert RGB to HSL
+ * @param {Array} rgb - RGB color value [r, g, b] (0-255 range)
+ * @returns {Array} - HSL color value [h, s, l]
+ */
+export function rgbToHsl(rgb) {
+  // Normalize RGB values to 0-1 range
+  const r = rgb[0] / 255;
+  const g = rgb[1] / 255;
+  const b = rgb[2] / 255;
+  
+  // Find min and max values
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  
+  // Calculate lightness
+  const l = (max + min) / 2;
+  
+  // If min and max are the same, it's a shade of gray (no saturation)
+  if (max === min) {
+    return [0, 0, l]; // Hue is 0, saturation is 0
+  }
+  
+  // Calculate saturation
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  
+  // Calculate hue
+  let h;
+  switch (max) {
+    case r:
+      h = (g - b) / d + (g < b ? 6 : 0);
+      break;
+    case g:
+      h = (b - r) / d + 2;
+      break;
+    case b:
+      h = (r - g) / d + 4;
+      break;
+  }
+  
+  h = h * 60; // Convert to degrees
+  
+  return [h, s, l];
+}
+
+/**
  * Calculate the luminance range of an image
  * @param {Array} hslImage - Array of HSL pixel values
  * @param {Number} outlierPercentage - Percentage of outliers to exclude (default: 5)

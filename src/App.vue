@@ -120,7 +120,7 @@ const updateImageUrls = () => {
 };
 
 // Handle WordPress palette selection
-const handleWPPaletteSelect = ({ name, colors, hueColors, overwrite }) => {
+const handleWPPaletteSelect = ({ name, colors, hueColors }) => {
   // Use the domain name as the palette name
   const paletteName = name;
   

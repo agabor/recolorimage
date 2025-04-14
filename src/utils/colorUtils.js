@@ -369,6 +369,119 @@ export async function fetchWordPressColorPalettes(url) {
 /**
  * Default color palettes
  */
+/**
+ * Adjust the luminance range of an HSL image
+ * @param {Array} hslArray - Array of HSL pixel objects
+ * @param {Array} luminancePalette - Array of colors ordered by luminance
+ * @param {Number} outlierPercentage - Percentage of outliers to exclude
+ * @returns {Array} - Array of HSL pixel objects with adjusted luminance
+ */
+export function adjustLuminanceRange(hslArray, luminancePalette, outlierPercentage) {
+  // Filter out transparent pixels (alpha < 25) before calculating luminance range
+  const nonTransparentPixels = hslArray.filter(pixel => pixel.alpha >= 25);
+  
+  // Calculate luminance range of input image using only non-transparent pixels
+  const inputRange = calculateLuminanceRange(
+    nonTransparentPixels.map(pixel => pixel.hsl),
+    outlierPercentage
+  );
+  
+  // Calculate luminance range of palette
+  const paletteLightness = luminancePalette.map(color => {
+    try {
+      const hsl = hexToHsl(color);
+      return hsl[2]; // Lightness component
+    } catch (err) {
+      console.error('Error converting color:', color, err);
+      return 0;
+    }
+  });
+  let paletteRange = {
+    min: 1000,
+    max: -1000
+  }
+  for (let l of paletteLightness) {
+    if (l < paletteRange.min) {
+      paletteRange.min = l;
+    }
+    if (l > paletteRange.max) {
+      paletteRange.max = l;
+    }
+  }
+  
+  // Calculate input range width
+  const inputRangeWidth = inputRange.max - inputRange.min;
+  const paletteRangeWidth = paletteRange.max - paletteRange.min;
+  
+  // Create a new array with adjusted lightness
+  return hslArray.map(pixel => {
+    const [h, s, l] = pixel.hsl;
+    let adjustedL = l;
+    
+    // If input range > palette range: scale down
+    if (inputRangeWidth > paletteRangeWidth) {
+      // Scale down
+      const scaleFactor = paletteRangeWidth / inputRangeWidth;
+      adjustedL = paletteRange.min + (l - inputRange.min) * scaleFactor;
+    } else {
+      // Check if input range is already inside palette range
+      if (inputRange.min >= paletteRange.min && inputRange.max <= paletteRange.max) {
+        // Input range is already inside palette range, do nothing
+        adjustedL = l;
+      } else {
+        // Calculate minimum shift needed to fit input range inside palette range
+        let shift = 0;
+        
+        // If input min is below palette min, shift up
+        if (inputRange.min < paletteRange.min) {
+          shift = paletteRange.min - inputRange.min;
+        }
+        // If input max is above palette max, shift down
+        else if (inputRange.max > paletteRange.max) {
+          shift = paletteRange.max - inputRange.max;
+        }
+        
+        adjustedL = l + shift;
+      }
+      
+      // Ensure we're within palette range (this should only affect edge cases)
+      adjustedL = Math.max(paletteRange.min, Math.min(paletteRange.max, adjustedL));
+    }
+    
+    return {
+      ...pixel,
+      hsl: [h, s, adjustedL]
+    };
+  });
+}
+
+/**
+ * Convert a hex color string to HSL
+ * @param {String} hex - Hex color string (e.g., "#FF0000")
+ * @returns {Array} - HSL color value [h, s, l]
+ */
+export function hexToHsl(hex) {
+  // Remove # if present
+  hex = hex.replace(/^#/, '');
+  
+  // Parse the hex values
+  let r, g, b;
+  if (hex.length === 3) {
+    // Short hex format (#RGB)
+    r = parseInt(hex.charAt(0) + hex.charAt(0), 16) / 255;
+    g = parseInt(hex.charAt(1) + hex.charAt(1), 16) / 255;
+    b = parseInt(hex.charAt(2) + hex.charAt(2), 16) / 255;
+  } else {
+    // Full hex format (#RRGGBB)
+    r = parseInt(hex.substring(0, 2), 16) / 255;
+    g = parseInt(hex.substring(2, 4), 16) / 255;
+    b = parseInt(hex.substring(4, 6), 16) / 255;
+  }
+  
+  // Convert RGB to HSL
+  return rgbToHsl([r * 255, g * 255, b * 255]);
+}
+
 export const DEFAULT_PALETTES = {
   // WordPress Theme
   wordpress: {

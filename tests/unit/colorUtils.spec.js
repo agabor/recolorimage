@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { calculateLuminanceRange, rgbToHsl, DEFAULT_PALETTES } from '@/utils/colorUtils';
-import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { createCanvas, loadImage } from 'canvas';

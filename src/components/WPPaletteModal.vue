@@ -190,10 +190,20 @@ const handleHueConfirm = () => {
   // Convert Set to Array for hue colors
   const hueColors = Array.from(selectedHueColors.value);
   
+  // Extract domain name from URL
+  let schemeName = 'wordpress';
+  try {
+    const url = new URL(urlInput.value);
+    schemeName = url.hostname.replace('www.', '');
+  } catch (e) {
+    console.error('Could not parse URL, using default name:', e);
+  }
+  
   emit('select', { 
-    name: 'combined', 
+    name: schemeName, 
     colors: luminancePalette.value,
-    hueColors: hueColors
+    hueColors: hueColors,
+    overwrite: true // Signal to overwrite if scheme with same name exists
   });
   
   // Reset state

@@ -120,16 +120,18 @@ const updateImageUrls = () => {
 };
 
 // Handle WordPress palette selection
-const handleWPPaletteSelect = ({ colors, hueColors }) => {
-  // Create a new palette entry with timestamp to ensure uniqueness
-  const wpPaletteName = `wp-palette-${Date.now()}`;
-  DEFAULT_PALETTES[wpPaletteName] = {
+const handleWPPaletteSelect = ({ name, colors, hueColors, overwrite }) => {
+  // Use the domain name as the palette name
+  const paletteName = name;
+  
+  // Create or overwrite the palette entry
+  DEFAULT_PALETTES[paletteName] = {
     luminance: colors.map(color => chroma(color)),
     hue: hueColors ? hueColors.map(color => chroma(color)) : []
   };
   
   // Update the selected palette
-  setPalette(wpPaletteName);
+  setPalette(paletteName);
   
   // Only enable luminance-only mode if no hue colors were selected
   settings.luminancePaletteOnly = !hueColors || hueColors.length === 0;

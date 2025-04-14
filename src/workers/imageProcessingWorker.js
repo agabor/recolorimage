@@ -6,6 +6,9 @@
  * This is a classic (non-module) worker
  */
 
+// Import from colorUtils
+importScripts('../utils/colorUtils.js');
+
 /**
  * Convert a hex color string to HSL
  * @param {String} hex - Hex color string (e.g., "#FF0000")
@@ -294,30 +297,6 @@ function findClosestHueColor(hue, huePalette) {
     color: huePalette[closestIndex],
     index: closestIndex
   };
-}
-
-/**
- * Calculate the luminance range of an image
- * @param {Array} hslImage - Array of HSL pixel values
- * @param {Number} outlierPercentage - Percentage of outliers to exclude (default: 5)
- * @returns {Object} - Object containing min and max luminance values
- */
-function calculateLuminanceRange(hslImage, outlierPercentage = 5) {
-  // Extract lightness values
-  const lightnessValues = hslImage.map(pixel => pixel[2]);
-  
-  // Sort lightness values
-  lightnessValues.sort((a, b) => a - b);
-  
-  // Calculate indices for outlier removal
-  const lowerIndex = Math.floor(lightnessValues.length * (outlierPercentage / 100));
-  const upperIndex = Math.floor(lightnessValues.length * (1 - outlierPercentage / 100));
-  
-  // Get min and max lightness values excluding outliers
-  const minLightness = lightnessValues[lowerIndex];
-  const maxLightness = lightnessValues[upperIndex];
-  
-  return { min: minLightness, max: maxLightness };
 }
 
 /**

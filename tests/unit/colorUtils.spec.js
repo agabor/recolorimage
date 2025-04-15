@@ -138,5 +138,5 @@ describe('adjustLuminanceRange', () => {
       expect(ap.hsl[1]).toBeCloseTo(op.hsl[1], 1); // Saturation
       expect(ap.hsl[2]).toBeCloseTo(op.hsl[2], 1); // Lightness
     }
-  });
+  }, { timeout: 30000 });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { rgbToHsl, DEFAULT_PALETTES } from '@/utils/colorUtils';
-import { calculateLuminanceRange } from '@/workers/workerUtils';
+import { calculateLuminanceRange, adjustLuminanceRange } from '@/workers/workerUtils';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { createCanvas, loadImage } from 'canvas';
@@ -89,5 +89,54 @@ describe('calculateLuminanceRange', () => {
     // Log the ranges for debugging
     console.log('Nord palette luminance range:', nordRange);
     console.log('Swatchbook.png luminance range:', luminanceRange);
+  });
+});
+
+describe('adjustLuminanceRange', () => {
+  it('should not modify the image when its range is within the Nord palette range', async () => {
+    // Get the Nord palette
+    const nordPalette = DEFAULT_PALETTES.nord.luminance;
+    
+    // Load the swatchbook.png image
+    const imagePath = resolve(__dirname, '../../sample_input/swatchbook.png');
+    const image = await loadImage(imagePath);
+    
+    // Create a canvas and draw the image
+    const canvas = createCanvas(image.width, image.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+    
+    // Get the pixel data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixelData = imageData.data;
+    
+    // Convert to HSL array with alpha values
+    const hslArray = [];
+    for (let i = 0; i < pixelData.length; i += 4) {
+      const r = pixelData[i];
+      const g = pixelData[i + 1];
+      const b = pixelData[i + 2];
+      const a = pixelData[i + 3];
+      
+      const hsl = rgbToHsl([r, g, b]);
+      hslArray.push({
+        hsl,
+        alpha: a
+      });
+    }
+    
+    // Store original HSL values
+    const originalHslArray = JSON.parse(JSON.stringify(hslArray));
+    
+    // Adjust luminance range
+    const adjustedHslArray = adjustLuminanceRange(hslArray, nordPalette, 5);
+    
+    // Verify each pixel's HSL values remain unchanged
+    for (let i = 0; i < hslArray.length; i++) {
+      expect(adjustedHslArray[i].hsl[0]).toBeCloseTo(originalHslArray[i].hsl[0], 5); // Hue
+      expect(adjustedHslArray[i].hsl[1]).toBeCloseTo(originalHslArray[i].hsl[1], 5); // Saturation
+      expect(adjustedHslArray[i].hsl[2]).toBeCloseTo(originalHslArray[i].hsl[2], 5); // Lightness
+      expect(adjustedHslArray[i].alpha).toBe(originalHslArray[i].alpha); // Alpha
+    }
   });
 });

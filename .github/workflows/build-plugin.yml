@@ -65,6 +65,28 @@ jobs:
             rm /tmp/readme-wp.html
           '
           
+      - name: Generate WordPress HTML from home.md
+        run: node md-to-wp.js home.md home-wp.html
+          
+      - name: Append shortcode to home HTML
+        run: |
+          echo '<!-- wp:shortcode -->' >> home-wp.html
+          echo '[recolorimage]' >> home-wp.html
+          echo '<!-- /wp:shortcode -->' >> home-wp.html
+          
+      - name: Transfer home WordPress HTML to server via SCP
+        if: github.ref == 'refs/heads/main'
+        run: |
+          scp -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem home-wp.html agabor@${{ secrets.SERVER_IP }}:/tmp/home-wp.html
+          
+      - name: Import home WordPress HTML to WordPress
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new -i ./deploy_key.pem agabor@${{ secrets.SERVER_IP }} '
+            wp post update 81 --post_content="$(cat /tmp/home-wp.html)"  --path=/var/www/recolorimage
+            rm /tmp/home-wp.html
+          '
+          
       - name: Clean up
         if: github.ref == 'refs/heads/main'
         run: |

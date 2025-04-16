@@ -23,7 +23,8 @@ const {
   getProcessedImageUrl,
   downloadProcessedImage,
   setPalette,
-  toggleHueColor
+  toggleHueColor,
+  resetSettings
 } = useImageProcessing();
 
 // Image URL for display
@@ -331,6 +332,17 @@ watch(error, (newError) => {
               When enabled, all colors will be mapped to the luminance palette without using the hue palette.
             </div>
           </div>
+          
+          <div class="settings-actions">
+            <button 
+              class="reset-settings-btn button" 
+              @click="resetSettings"
+              :disabled="isProcessing"
+              title="Reset settings to default values"
+            >
+              Reset to Defaults
+            </button>
+          </div>
         </section>
 
         <button 
@@ -583,5 +595,30 @@ watch(error, (newError) => {
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.reset-settings-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--wp--preset--color--nord-snow-storm-0);
+  color: var(--wp--preset--color--nord-polar-night-0);
+  transition: all 0.2s ease;
+}
+
+.reset-settings-btn:hover {
+  background-color: var(--wp--preset--color--nord-aurora-red);
+  color: var(--wp--preset--color--nord-snow-storm-2);
+}
+
+.reset-settings-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

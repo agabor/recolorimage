@@ -28,13 +28,16 @@ export function useImageProcessing() {
   const error = ref(null);
   const matchedPaletteStats = ref([]);
   
-  // Settings
-  const settings = reactive({
+  // Default settings values
+  const DEFAULT_SETTINGS = {
     grayscaleThreshold: 30,
     hueThreshold: 60,
     outlierPercentage: 5,
     luminancePaletteOnly: false
-  });
+  };
+  
+  // Settings
+  const settings = reactive({...DEFAULT_SETTINGS});
   
 // Selected palettes
 const selectedPalette = reactive({
@@ -338,6 +341,8 @@ const setPalette = (paletteName) => {
     selectedPalette.hue = colorUtils.DEFAULT_PALETTES[paletteName].hue.map(hex => chroma(hex));
     selectedPalette.disabledHues = [];
     selectedPalette.custom = false;
+    // Clear matched percentages when palette changes
+    matchedPaletteStats.value = [];
   }
 };
   
@@ -360,6 +365,8 @@ const setCustomPalette = (luminancePalette, huePalette) => {
   
   selectedPalette.disabledHues = [];
   selectedPalette.custom = true;
+  // Clear matched percentages when palette changes
+  matchedPaletteStats.value = [];
 };
 
 /**
@@ -381,6 +388,16 @@ const toggleHueColor = (index) => {
     // Remove from disabled list
     selectedPalette.disabledHues.splice(disabledIndex, 1);
   }
+};
+
+/**
+ * Reset settings to default values
+ */
+const resetSettings = () => {
+  // Reset each setting to its default value
+  Object.keys(DEFAULT_SETTINGS).forEach(key => {
+    settings[key] = DEFAULT_SETTINGS[key];
+  });
 };
   
   // Computed properties
@@ -422,6 +439,7 @@ const toggleHueColor = (index) => {
     setPalette,
     setCustomPalette,
     toggleHueColor,
+    resetSettings,
     
     // Note: Internal processing functions are now in the worker
   };

@@ -4,7 +4,6 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { resolve } from 'node:path'
 import fs from 'node:fs'
-import path from 'node:path'
 
 // Custom plugin to handle worker file processing
 function workerProcessingPlugin() {

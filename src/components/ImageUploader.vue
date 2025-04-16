@@ -231,9 +231,8 @@ const resizeInfo = computed(() => {
           :src="showOutputImage && props.processedImageUrl ? props.processedImageUrl : imageUrl" 
           :alt="showOutputImage ? 'Processed image' : 'Selected image'" 
         />
-        <div v-if="wasResized && !showOutputImage" class="resize-notification">
-          {{ resizeInfo }}
-        </div>
+<div v-if="wasResized && !showOutputImage" class="resize-notification" v-html="resizeInfo">
+</div>
         <div class="image-actions">
           <button class="clear-button" @click.stop="clearImage">
             Clear Image

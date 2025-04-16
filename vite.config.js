@@ -33,7 +33,11 @@ function workerProcessingPlugin() {
         .replace(/export /g, '');
       
       const combinedContent = `${workerUtilsContent}\n${workerContentWithoutImports}`;
-      fs.writeFileSync(workerDest, combinedContent, 'utf-8');
+      combinedContentWithoutComments = combinedContent
+        .replace(/\/\/.*\n/g, '') // Remove single-line comments
+        .replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
+
+      fs.writeFileSync(workerDest, combinedContentWithoutComments, 'utf-8');
       console.log('Worker file copied to output directory');
     }
   };

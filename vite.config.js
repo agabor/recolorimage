@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => ({
       const dirname = fileURLToPath(new URL('.', import.meta.url));
       const workerSrc = resolve(dirname, 'src/workers/imageProcessingWorker.js');
       const workerDest = resolve(dirname, 'dist/assets/imageProcessingWorker.js');
+      const workerUtilsSrc = resolve(dirname, 'src/workers/workerUtils.js');
       
       // Ensure the assets directory exists
       if (!fs.existsSync(resolve(dirname, 'dist/assets'))) {
@@ -58,7 +59,13 @@ export default defineConfig(({ mode }) => ({
       }
       
       // Copy the worker file
-      fs.copyFileSync(workerSrc, workerDest);
+      //concatenate the two files
+      const workerContent = fs.readFileSync(workerSrc, 'utf-8');
+      //remove the imports from the worker file
+      const workerContentWithoutImports = workerContent.replace(/import .* from .*;\n/g, '');
+      const workerUtilsContent = fs.readFileSync(workerUtilsSrc, 'utf-8');
+      const combinedContent = `${workerUtilsContent}\n${workerContentWithoutImports}`;
+      fs.writeFileSync(workerDest, combinedContent, 'utf-8');
       console.log('Worker file copied to output directory');
     }
   }

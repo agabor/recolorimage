@@ -33,7 +33,7 @@ function workerProcessingPlugin() {
         .replace(/export /g, '');
       
       const combinedContent = `${workerUtilsContent}\n${workerContentWithoutImports}`;
-      combinedContentWithoutComments = combinedContent
+      const combinedContentWithoutComments = combinedContent
         .replace(/\/\/.*\n/g, '') // Remove single-line comments
         .replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
 
